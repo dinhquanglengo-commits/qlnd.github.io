@@ -267,11 +267,45 @@
         <div class="step-text">Để được hỗ trợ chi tiết, liên hệ Ban CNTT hoặc nhấn nút bên dưới:</div>
       </div></div>
       <div style="padding:10px 20px 16px;">
-        <button class="ask-btn" onclick="sendPrompt('Hướng dẫn chi tiết cách sử dụng thiết bị phòng họp Polycom và Teams tại PV GAS tầng 14-15F')">Hỏi hướng dẫn chi tiết ↗</button>
+        <button class="ask-btn" onclick="openPHRoomModal()">Hỏi hướng dẫn chi tiết ↗</button>
       </div>
     </div>
   </div>
+ 
+<!-- MODAL 1: CHỌN PHÒNG HỌP -->
+    <div id="roomModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="roomTitle">Chọn phòng họp cần hỗ trợ</h3>
+                <button class="close-btn" onclick="closeAllModals()">×</button>
+            </div>
+            
+            <!-- Danh sách phòng họp -->
+            <div id="roomList" class="list-options">
+                <div class="option-item" onclick="showGuide('p1401')">
+                    <span>Phòng họp 14.01 (Lớn)</span>
+                    <span>Tầng 14</span>
+                </div>
+                <div class="option-item" onclick="showGuide('p1405')">
+                    <span>Phòng họp 14.05</span>
+                    <span>Tầng 14</span>
+                </div>
+                <div class="option-item" onclick="showGuide('p1502')">
+                    <span>Phòng họp 15.02</span>
+                    <span>Tầng 15</span>
+                </div>
+            </div>
 
+            <!-- Nội dung chi tiết (Mặc định ẩn) -->
+            <div id="guideDetail" style="display: none;">
+                <div class="back-btn" onclick="backToRoomList()">← Quay lại danh sách</div>
+                <div id="guideText" class="guide-content" style="display: block;">
+                    <!-- Nội dung sẽ được thay đổi bằng JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+ 
   <!-- Section 9 -->
   <div class="section" id="sec-s9">
     <div class="section-header" onclick="toggle('s9')">
@@ -421,6 +455,77 @@
             }
         });
     </script>
+
+<!-- JAVASCRIPT ĐỂ ĐÓNG/MỞ MODAL PHÒNG HỌP-->
+<script>
+        // Dữ liệu hướng dẫn các phòng
+        const guides = {
+            'p1401': `
+                <strong>Hướng dẫn Phòng 14.01:</strong><br>
+                1. Sử dụng Remote Polycom màu bạc.<br>
+                2. Nhấn nút Nguồn để khởi động hệ thống.<br>
+                3. Trên màn hình cảm ứng, chọn 'Join Meeting' và nhập mã số Teams.<br>
+                4. Lưu ý: Kiểm tra dây HDMI nếu muốn chia sẻ màn hình laptop.
+            `,
+            'p1405': `
+                <strong>Hướng dẫn Phòng 14.05:</strong><br>
+                1. Hệ thống dùng tivi LG và loa Jabra.<br>
+                2. Kết nối dây USB-Logitech vào máy tính cá nhân.<br>
+                3. Chọn Camera 'Logitech MeetUp' trong ứng dụng họp.<br>
+                4. Điều chỉnh âm lượng trên loa Jabra đặt giữa bàn.
+            `,
+            'p1502': `
+                <strong>Hướng dẫn Phòng 15.02:</strong><br>
+                1. Bật bảng điều khiển treo tường cạnh cửa.<br>
+                2. Hệ thống tự động hạ màn chiếu.<br>
+                3. Sử dụng micro cổ ngỗng trên bàn để phát biểu.<br>
+                4. Liên hệ lễ tân nếu cần hỗ trợ nước uống.
+            `
+        };
+
+        const roomPHModal = document.getElementById('roomModal');
+        const roomList = document.getElementById('roomList');
+        const guideDetail = document.getElementById('guideDetail');
+        const guideText = document.getElementById('guideText');
+        const roomTitle = document.getElementById('roomTitle');
+
+        // Mở Modal Phòng họp
+        function openPHRoomModal() {
+            roomModal.style.display = 'flex';
+            backToRoomList(); // Reset về danh sách khi mở
+        }
+
+        // Đóng tất cả
+        function closeAllModals() {
+            roomModal.style.display = 'none';
+            zaloModal.style.display = 'none';
+        }
+
+        // Hiện hướng dẫn chi tiết
+        function showGuide(roomId) {
+            roomList.style.display = 'none';
+            guideDetail.style.display = 'block';
+            guideText.innerHTML = guides[roomId];
+            roomTitle.innerText = "Thông tin hướng dẫn";
+        }
+
+        // Quay lại danh sách phòng
+        function backToRoomList() {
+            roomList.style.display = 'flex';
+            guideDetail.style.display = 'none';
+            roomTitle.innerText = "Chọn phòng họp cần hỗ trợ";
+        }
+
+        // Click ra ngoài để đóng
+        window.onclick = function(event) {
+            if (event.target == roomModal || event.target == zaloModal) {
+                closeAllModals();
+            }
+        }
+    </script>
+
+
+
 
 <script>
 function toggle(id) {
