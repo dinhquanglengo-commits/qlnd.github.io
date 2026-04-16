@@ -634,10 +634,65 @@
   <!-- Footer -->
   <div class="guide-footer">
     <div class="footer-text"><b>Ban Kỹ Thuật Công Nghệ — Tổng Công ty Khí Việt Nam CTCP - PetroVietnam Gas Joint Stock Corporation</b><br>Phiên bản 2026 · Dành cho nhân viên nội bộ<br>SĐT Hỗ Trợ:<br>Phạm Nguyên An 0379759697<br>Nguyễn Đức Đạt 0903736095<br>Lê Ngô Đình Quang 0785619931</div>
-    <button class="ask-btn" onclick="sendPrompt('Tôi cần hỗ trợ thêm về một mục trong tài liệu PV GAS IT')">Hỏi thêm ↗</button>
+    <button class="ask-btn" onclick="openZaloModal()">Hỏi thêm ↗</button>
   </div>
 
+  
+<!-- KHỐI MODAL (BẢNG CHỌN NGƯỒI CHAT ZALO) - Mặc định ẩn (hidden) -->
+    <div id="zaloModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-[90%] max-w-md transform transition-all">
+            
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-bold text-[#1e3a8a]">Chọn IT để hỗ trợ qua Zalo</h3>
+                <button onclick="closeZaloModal()" class="text-gray-400 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <!-- Danh sách các nút chat Zalo -->
+            <!-- Cú pháp link Zalo: https://zalo.me/số_điện_thoại -->
+            <div class="flex flex-col gap-3">
+                <a href="https://zalo.me/0379759697" target="_blank" class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors">
+                    <span>Phạm Nguyên An</span>
+                    <span class="text-sm font-normal">0379 759 697</span>
+                </a>
+                
+                <a href="https://zalo.me/0903736095" target="_blank" class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors">
+                    <span>Nguyễn Đức Đạt</span>
+                    <span class="text-sm font-normal">0903 736 095</span>
+                </a>
+                
+                <a href="https://zalo.me/0785619931" target="_blank" class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors">
+                    <span>Lê Ngô Đình Quang</span>
+                    <span class="text-sm font-normal">0785 619 931</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+  
 </div>
+
+
+ <!-- JAVASCRIPT ĐỂ ĐÓNG/MỞ MODAL -->
+    <script>
+        const modal = document.getElementById('zaloModal');
+
+        function openZaloModal() {
+            modal.classList.remove('hidden');
+        }
+
+        function closeZaloModal() {
+            modal.classList.add('hidden');
+        }
+
+        // Đóng popup khi click ra ngoài vùng trắng
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeZaloModal();
+            }
+        });
+    </script>
 
 <script>
 function toggle(id) {
