@@ -465,6 +465,31 @@
         </div>
     </div>
 
+<!-- SCRIPTTTTTTT -->
+ <script>
+        function toggleAccordion() {
+            const content = document.getElementById('accordionContent');
+            const arrow = document.getElementById('arrowIcon');
+            
+            if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                // Đóng lại
+                content.style.maxHeight = '0px';
+                content.classList.remove('open');
+                arrow.classList.remove('rotate');
+            } else {
+                // Mở ra: gán maxHeight bằng scrollHeight để mượt
+                content.style.maxHeight = content.scrollHeight + "px";
+                content.classList.add('open');
+                arrow.classList.add('rotate');
+            }
+        }
+
+        // Tự động mở khi trang vừa load (nếu muốn)
+        window.onload = () => {
+            toggleAccordion();
+        };
+    </script>
+
  <!-- JAVASCRIPT ĐỂ ĐÓNG/MỞ MODAL -->
     <script>
         const modal = document.getElementById('zaloModal');
