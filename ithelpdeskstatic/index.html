@@ -6,6 +6,48 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+
+
+<!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center gradient-bg text-white">
+        
+        <!-- Animation chính -->
+        <div class="loader-ring flex items-center justify-center">
+            <div class="spinner"></div>
+            <!-- Chữ PV GAS nằm ở tâm -->
+            <div class="absolute flex flex-col items-center">
+                <span class="font-black text-lg tracking-tighter italic">PV GAS</span>
+                <span class="text-[8px] tracking-[0.3em] opacity-60 uppercase font-light">KTCN</span>
+            </div>
+        </div>
+
+        <!-- Thông tin trạng thái -->
+        <div class="mt-12 text-center px-6 max-w-sm">
+            <h1 class="text-lg md:text-xl font-bold tracking-widest mb-3 uppercase">
+                Hệ Thống Quản Trị CNTT
+            </h1>
+            <div class="flex items-center justify-center gap-2">
+                <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></span>
+                <p id="status-text" class="text-blue-100 text-sm font-light italic">
+                    Đang thiết lập kết nối an toàn...
+                </p>
+            </div>
+        </div>
+
+        <!-- Thanh tiến trình -->
+        <div class="mt-8 w-64 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+            <div id="progress-bar" class="h-full bg-gradient-to-r from-blue-400 to-white w-0 transition-all duration-300 ease-out shadow-[0_0_15px_rgba(255,255,255,0.5)]"></div>
+        </div>
+        
+        <!-- Footer Info -->
+        <div class="absolute bottom-8 flex flex-col items-center gap-1 opacity-40">
+            <div class="h-[1px] w-12 bg-white mb-2"></div>
+            <p class="text-[9px] uppercase tracking-[0.4em]">PV Gas</p>
+            <p class="text-[8px]">Ban Kỹ Thuật Công Nghệ © 2026</p>
+        </div>
+    </div>
+  
+  //Header nè  
 <div class="guide-wrap">
 
   <div class="guide-header">
@@ -650,19 +692,52 @@
         }
     </script>
 
-
-
-
+  // Loading screen pv gas
 <script>
-function toggle(id) {
-  var body = document.getElementById('body-' + id);
-  var chev = document.getElementById('chev-' + id);
-  var sec = document.getElementById('sec-' + id);
-  var isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  if (chev) chev.classList.toggle('open', !isOpen);
-  if (!isOpen && sec) {
-    setTimeout(function() { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
-  }
-}
-</script>
+        const progressBar = document.getElementById('progress-bar');
+        const statusText = document.getElementById('status-text');
+        const loadingScreen = document.getElementById('loading-screen');
+        
+        const steps = [
+            "Đang kiểm tra bảo mật MFA...",
+            "Tải cơ sở dữ liệu PV GAS...",
+            "Đồng bộ hóa cấu hình đám mây...",
+            "Tối ưu hóa giao diện người dùng...",
+            "Khởi tạo thành công!"
+        ];
+
+        let currentProgress = 0;
+        let stepIndex = 0;
+
+        const updateLoading = () => {
+            // Tăng ngẫu nhiên để tạo cảm giác thật
+            currentProgress += Math.floor(Math.random() * 15) + 5;
+            if (currentProgress > 100) currentProgress = 100;
+
+            progressBar.style.width = currentProgress + '%';
+
+            // Cập nhật text theo mốc %
+            const targetStep = Math.floor(currentProgress / 25);
+            if (targetStep > stepIndex && stepIndex < steps.length - 1) {
+                stepIndex = targetStep;
+                statusText.innerText = steps[stepIndex];
+            }
+
+            if (currentProgress < 100) {
+                setTimeout(updateLoading, 300 + Math.random() * 400);
+            } else {
+                setTimeout(() => {
+                    loadingScreen.classList.add('fade-out');
+                    // Xóa hẳn khỏi DOM sau khi ẩn để nhẹ máy
+                    setTimeout(() => loadingScreen.remove(), 800);
+                }, 800);
+            }
+        };
+
+        // Bắt đầu chạy sau khi trang load
+        window.onload = updateLoading;
+    </script>
+
+
+
+
