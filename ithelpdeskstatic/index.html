@@ -20,11 +20,10 @@
                 <span class="text-[8px] tracking-[0.3em] opacity-60 uppercase font-light">KTCN</span>
             </div>
         </div>
-
         <!-- Thông tin trạng thái -->
         <div class="mt-12 text-center px-6 max-w-sm">
             <h1 class="text-lg md:text-xl font-bold tracking-widest mb-3 uppercase">
-                Hệ Thống Hướng Dẫn CNTT
+                Hệ Thống Quản Trị CNTT
             </h1>
             <div class="flex items-center justify-center gap-2">
                 <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></span>
@@ -33,7 +32,6 @@
                 </p>
             </div>
         </div>
-
         <!-- Thanh tiến trình -->
         <div class="mt-8 w-64 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
             <div id="progress-bar" class="h-full bg-gradient-to-r from-blue-400 to-white w-0 transition-all duration-300 ease-out shadow-[0_0_15px_rgba(255,255,255,0.5)]"></div>
@@ -46,8 +44,7 @@
             <p class="text-[8px]">Ban Kỹ Thuật Công Nghệ © 2026</p>
         </div>
     </div>
-  
-  <!-- Header Info -->
+    
 <div class="guide-wrap">
 
   <div class="guide-header">
@@ -692,7 +689,25 @@
         }
     </script>
 
-  <!-- Loading Screen -->
+
+
+
+<script>
+function toggle(id) {
+  var body = document.getElementById('body-' + id);
+  var chev = document.getElementById('chev-' + id);
+  var sec = document.getElementById('sec-' + id);
+  var isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  if (chev) chev.classList.toggle('open', !isOpen);
+  if (!isOpen && sec) {
+    setTimeout(function() { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+  }
+}
+</script>
+
+
+
 <script>
         const progressBar = document.getElementById('progress-bar');
         const statusText = document.getElementById('status-text');
@@ -705,24 +720,19 @@
             "Tối ưu hóa giao diện người dùng...",
             "Khởi tạo thành công!"
         ];
-
         let currentProgress = 0;
         let stepIndex = 0;
-
         const updateLoading = () => {
             // Tăng ngẫu nhiên để tạo cảm giác thật
             currentProgress += Math.floor(Math.random() * 15) + 5;
             if (currentProgress > 100) currentProgress = 100;
-
             progressBar.style.width = currentProgress + '%';
-
             // Cập nhật text theo mốc %
             const targetStep = Math.floor(currentProgress / 25);
             if (targetStep > stepIndex && stepIndex < steps.length - 1) {
                 stepIndex = targetStep;
                 statusText.innerText = steps[stepIndex];
             }
-
             if (currentProgress < 100) {
                 setTimeout(updateLoading, 300 + Math.random() * 400);
             } else {
@@ -733,11 +743,6 @@
                 }, 800);
             }
         };
-
         // Bắt đầu chạy sau khi trang load
         window.onload = updateLoading;
     </script>
-
-
-
-
