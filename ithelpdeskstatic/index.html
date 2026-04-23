@@ -48,6 +48,9 @@
 <div class="guide-wrap">
 
   <div class="guide-header">
+    <button id="themeToggle" class="absolute top-6 right-6 md:top-8 md:right-8 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full p-2 text-white backdrop-blur-sm transition-all z-10 flex items-center justify-center w-10 h-10 shadow-lg" title="Giao diện tối">
+      🌙
+    </button>
     <div class="header-badge"><span class="header-dot"></span>Ban Kỹ Thuật Công Nghệ</div>
     <h1>Hướng dẫn Cài đặt &amp; Sử dụng<br>Hệ thống CNTT PV GAS</h1>
     <div class="gold-line"></div>
@@ -61,8 +64,12 @@
   </div>
 
   <div class="toc-panel">
-    <div class="toc-header">
-      <span>▤</span> Mục lục
+    <div class="toc-header flex justify-between items-center flex-wrap gap-2">
+      <div><span>▤</span> Mục lục</div>
+      <div class="relative">
+        <input type="text" id="searchInput" placeholder="Tìm hướng dẫn..." class="text-xs px-3 py-1.5 rounded-full border border-blue-200 outline-none text-gray-700 bg-white shadow-sm focus:border-blue-400 w-48 transition-all focus:w-56 focus:ring-2 ring-blue-100">
+        <span class="absolute right-3 top-1.5 text-gray-400 text-xs">🔍</span>
+      </div>
     </div>
     <div class="toc-grid">
       <div class="toc-item" onclick="toggle('s1')"><div class="toc-num">1</div><div class="toc-text">Kết nối WiFi (iOS &amp; Android)</div></div>
@@ -488,14 +495,13 @@
   </div>
 </div>
 
-
 <!-- KHỐI MODAL (BẢNG CHỌN NGƯỒI CHAT ZALO) - Mặc định ẩn (hidden) -->
     <div id="zaloModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-[90%] max-w-md transform transition-all">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-[90%] max-w-md transform transition-all glass-modal">
             
             <div class="flex justify-between items-center mb-5">
-                <h3 class="text-lg font-bold text-[#1e3a8a]">Chọn IT để hỗ trợ qua Zalo</h3>
-                <button onclick="closeZaloModal()" class="text-gray-400 hover:text-gray-700">
+                <h3 class="text-lg font-bold text-[#1e3a8a] dark:text-blue-300">Chọn IT để hỗ trợ qua Zalo</h3>
+                <button onclick="closeZaloModal()" class="text-gray-400 hover:text-gray-700 dark:hover:text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
@@ -503,17 +509,17 @@
             <!-- Danh sách các nút chat Zalo -->
             <!-- Cú pháp link Zalo: https://zalo.me/số_điện_thoại -->
             <div class="flex flex-col gap-3">
-                <a href="https://zalo.me/0379759697" target="_blank" class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors">
+                <a href="https://zalo.me/0379759697" target="_blank" class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-blue-200 dark:hover:bg-slate-600">
                     <span>Phạm Nguyên An</span>
                     <span class="text-sm font-normal">0379 759 697</span>
                 </a>
                 
-                <a href="https://zalo.me/0903736095" target="_blank" class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors">
+                <a href="https://zalo.me/0903736095" target="_blank" class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-blue-200 dark:hover:bg-slate-600">
                     <span>Nguyễn Đức Đạt</span>
                     <span class="text-sm font-normal">0903 736 095</span>
                 </a>
                 
-                <a href="https://zalo.me/0785619931" target="_blank" class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors">
+                <a href="https://zalo.me/0785619931" target="_blank" class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-blue-200 dark:hover:bg-slate-600">
                     <span>Lê Ngô Đình Quang</span>
                     <span class="text-sm font-normal">0785 619 931</span>
                 </a>
@@ -522,227 +528,29 @@
         </div>
     </div>
 
-<!-- SCRIPTTTTTTT -->
- <script>
-        function toggleAccordion() {
-            const content = document.getElementById('accordionContent');
-            const arrow = document.getElementById('arrowIcon');
-            
-            if (content.style.maxHeight && content.style.maxHeight !== '0px') {
-                // Đóng lại
-                content.style.maxHeight = '0px';
-                content.classList.remove('open');
-                arrow.classList.remove('rotate');
-            } else {
-                // Mở ra: gán maxHeight bằng scrollHeight để mượt
-                content.style.maxHeight = content.scrollHeight + "px";
-                content.classList.add('open');
-                arrow.classList.add('rotate');
-            }
-        }
+    <!-- Lightbox -->
+    <div id="lightbox" class="fixed inset-0 bg-black/90 z-[100] hidden flex-col items-center justify-center backdrop-blur-md transition-all duration-300 opacity-0 cursor-zoom-out" onclick="closeLightbox()">
+        <button class="absolute top-6 right-6 text-white text-4xl hover:text-gray-300">&times;</button>
+        <img id="lightboxImg" src="" class="max-w-[95%] max-h-[90vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300">
+        <p class="text-white/60 text-sm mt-4 tracking-widest uppercase">Click anywhere to close</p>
+    </div>
 
-        // Tự động mở khi trang vừa load (nếu muốn)
-        window.onload = () => {
-            toggleAccordion();
-        };
-    </script>
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-xl flex items-center justify-center text-xl transition-all duration-300 translate-y-20 opacity-0 z-40 focus:outline-none" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        ↑
+    </button>
 
- <!-- JAVASCRIPT ĐỂ ĐÓNG/MỞ MODAL -->
-    <script>
-        const modal = document.getElementById('zaloModal');
-
-        function openZaloModal() {
-            modal.classList.remove('hidden');
-        }
-
-        function closeZaloModal() {
-            modal.classList.add('hidden');
-        }
-
-        // Đóng popup khi click ra ngoài vùng trắng
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeZaloModal();
-            }
-        });
-    </script>
-
-<!-- JAVASCRIPT ĐỂ ĐÓNG/MỞ MODAL PHÒNG HỌP-->
-<script>
-        // Dữ liệu hướng dẫn các phòng
-        const guides = {
-            'p1401': `
-                <strong>Họp trực tuyến qua hệ thống Video Conference (Tập đoàn hoặc các đơn vị thành viên):</strong>
-            <br>Bước 1: Kích hoạt Micro phòng họp bằng cách nhấn vào nút nguồn trên thiết bị.
-            <br>Bước 2: Trên màn hình điều khiển Cisco: thực hiện quay số (call) tới địa chỉ: <strong>151@10 . 2 . 84 . 10</strong>(viết liền khi nhập)
-            <br>Bước 3: Kết nối dây HDMI tại bàn nếu cần trình chiếu.
-            <br>Lưu ý: Trường hợp cần kết nối thêm MS Teams nội bộ vui lòng gửi link MS Teams cho bộ phận CNTT.
-               <br><strong>Họp trực tuyến qua MS Teams, Zoom (đối tác khách hàng bên ngoài):</strong>
-            <br>Bước 1: Kích hoạt Micro phòng họp bằng cách nhấn vào nút nguồn trên thiết bị.
-            <br>Bước 2: Kết nối phần cứng cắm các cổng tín hiệu bao gồm: HDMI, USB vào máy tính. (Lưu ý: Nếu chỉ họp nội bộ/offline, chỉ cần kết nối dây HDMI tại bàn để trình chiếu).
-            <br>Bước 3: Truy cập đường dẫn (link) cuộc họp. Tại giao diện chờ, thực hiện kiểm tra Camera và Âm thanh trước khi tham gia chính thức.
-            <br>Bước 4: Cấu hình thông số:
-            <br>Camera: Chọn device là HDMI Capture.
-            <br>Âm thanh: Chọn device là Echo Cancelling Speakerphone (Core-pvgas-vip).
-            `,
-            'p1501': `
-                <strong>Họp trực tuyến qua hệ thống Video Conference:</strong>
-               <br>Bước 1: Khởi động thiết bị Bật công tắc nguồn và điều khiển từ xa (Remote) của máy chiếu. Kích hoạt Micro phòng họp bằng cách nhấn vào nút nguồn trên thiết bị.
-               <br>Bước 2: Sử dụng Remote Polycom, thực hiện quay số (call) tới địa chỉ: <strong>1501@10 . 2 . 84 . 10</strong>(viết liền khi nhập)
-               <br>Bước 3: Kết nối dây HDMI vào máy tính cá nhân nếu cần trình chiếu.
-             <br><strong>Họp trực tuyến qua MS Teams, Zoom:</strong>
-             <br> Bước 1: Tương tự bước 1 phần Video Conference.
-             <br> Bước 2: Kết nối phần cứng cắm các cổng tín hiệu bao gồm: HDMI, USB và Jack 3.5mm vào máy tính.
-             <br> Bước 3: Truy cập link cuộc họp, kiểm tra Camera và Âm thanh.
-             <br> Bước 4: Cấu hình thông số:
-             <br>Camera: Chọn device là Polycom EagleEye IV USB. Sử dụng Remote để điều chỉnh góc quay.
-             <br>Âm thanh: Chọn device là Speakers / Headphones.
-            `,
-            'p1502': `
-                <strong>Họp trực tuyến qua MS Teams, Zoom,...:</strong>
-             <br>Bước 1: Kết nối phần cứng cắm các cổng tín hiệu bao gồm: HDMI, USB vào máy tính.
-             <br>Bước 2: Truy cập link cuộc họp, kiểm tra Camera và Âm thanh.
-             <br>Bước 3: Cấu hình thông số:
-             <br>Camera: Chọn device là Huddly IQ.
-             <br>Âm thanh: Chọn device là Echo Cancelling Speakerphone (Crestron Mercury).
-             <br>Bước 4: Bật/Tắt Microphone, âm lượng trên màn hình điều khiển Crestron.
-            `,
-         'P1504':`
-         <strong>Họp trực tuyến qua hệ thống Video Conference:</strong>
-            <br>Bước 1: Sử dụng remote hoặc màn hình điều khiển Crestron bật máy chiếu.
-            <br>Bước 2: Sử dụng remote Polycom hoặc màn hình điều khiển Crestron call tới địa chỉ <strong>1504@10 . 2 . 84 . 10</strong>(viết liền khi nhập)
-            <br>Bước 3: Kết nối dây HDMI vào máy tính cá nhân nếu cần trình chiếu.
-         `,
-         'p1505':`
-         <strong>Lưu ý: Không có thiết bị họp trực tuyến.</strong>
-          <br>Bước 1: Sử dụng remote máy chiếu chọn cổng INPUT C.
-          <br>Bước 2: Trên máy tính nhấn tổ hợp phím WINDOWS + K, chọn device "Meeting Room 5-15F".
-         `,
-          'p1506':`
-        <strong>Họp trực tuyến qua MS Teams, Zoom,...:</strong>
-        <br>Bước 1: Sử dụng remote bật tivi.
-        <br>Bước 2: Kết nối phần cứng cắm các cổng tín hiệu: HDMI, USB vào máy tính.
-        <br>Bước 3: Truy cập link cuộc họp, kiểm tra Camera và Âm thanh.
-        <br>Bước 4: Cấu hình thông số:
-        <br>Camera: Chọn device là Logitech Meetup.
-        <br>Âm thanh: Chọn device là Echo Cancelling Speakerphone (Logitech MeetUp Speakerphone).
-         `,
-          'p1507':`
-         <strong>Họp trực tuyến qua hệ thống Video Conference:</strong>
-         <br>Bước 1: Sử dụng thiết bị cảm ứng điều khiển, thực hiện quay số tới địa chỉ: <strong>1507@10 . 2 . 84 . 10</strong>(viết liền khi nhập)
-         <br>Bước 2: Kết nối dây HDMI vào máy tính nếu cần trình chiếu.
-         <br><strong>Họp trực tuyến qua MS Teams, Zoom:</strong>
-         <br>Bước 1: Kết nối phần cứng cắm các cổng tín hiệu: HDMI, USB.
-         <br>Bước 3: Truy cập link cuộc họp, kiểm tra thiết bị.
-         <br>Bước 4: Cấu hình thông số: Camera & Âm thanh chọn nguồn tín hiệu USB PnP Camera/Audio.
-         `,
-           'p1509':`
-         <strong>Hệ thống Video Conference:</strong>
-          <br>Bước 2: Trên màn hình điều khiển Crestron (phía trên): Tab "Display Control" chọn POWER ON tivi; Tab "Presentation" chọn Cisco Far.
-          <br>Bước 3: Trên màn hình Cisco (phía dưới) quay số tới: <strong>151@10 . 2 . 84 . 10</strong>(viết liền khi nhập)
-          <br>Bước 4: Kết nối dây HDMI màu vàng (Outlet 1) vào cổng INPUT hub Ugreen.
-          <br><strong>Họp qua MS Teams, Zoom:</strong>
-          <br>Bước 3: Kết nối HDMI (vào cổng INPUT hub Ugreen) và USB vào máy tính.
-          <br>Bước 5: Cấu hình Camera là HDMI Capture, Âm thanh là Echo Cancelling Speakerphone.
-         `,
-        };
- 
-        const zaloModal = document.getElementById('zaloModal');
-        const roomPHModal = document.getElementById('roomModal');
-        const roomList = document.getElementById('roomList');
-        const guideDetail = document.getElementById('guideDetail');
-        const guideText = document.getElementById('guideText');
-        const roomTitle = document.getElementById('roomTitle');
-
-        // Mở Modal Phòng họp
-        function openPHRoomModal() {
-            roomModal.style.display = 'flex';
-            backToRoomList(); // Reset về danh sách khi mở
-        }
-
-        // Đóng tất cả
-        function closeAllModals() {
-            roomModal.style.display = 'none';
-            zaloModal.style.display = 'none';
-        }
-
-        // Hiện hướng dẫn chi tiết
-        function showGuide(roomId) {
-            roomList.style.display = 'none';
-            guideDetail.style.display = 'block';
-            guideText.innerHTML = guides[roomId];
-            roomTitle.innerText = "Thông tin hướng dẫn";
-        }
-
-        // Quay lại danh sách phòng
-        function backToRoomList() {
-            roomList.style.display = 'flex';
-            guideDetail.style.display = 'none';
-            roomTitle.innerText = "Chọn phòng họp cần hỗ trợ";
-        }
-
-        // Click ra ngoài để đóng
-        window.onclick = function(event) {
-            if (event.target == roomModal || event.target == zaloModal) {
-                closeAllModals();
-            }
-        }
-    </script>
+<script src="script.js"></script>
 
 
 
 
-<script>
-function toggle(id) {
-  var body = document.getElementById('body-' + id);
-  var chev = document.getElementById('chev-' + id);
-  var sec = document.getElementById('sec-' + id);
-  var isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  if (chev) chev.classList.toggle('open', !isOpen);
-  if (!isOpen && sec) {
-    setTimeout(function() { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
-  }
-}
-</script>
 
 
 
-<script>
-        const progressBar = document.getElementById('progress-bar');
-        const statusText = document.getElementById('status-text');
-        const loadingScreen = document.getElementById('loading-screen');
-        
-        const steps = [
-            "Đang kiểm tra bảo mật MFA...",
-            "Tải cơ sở dữ liệu PV GAS...",
-            "Đồng bộ hóa cấu hình đám mây...",
-            "Tối ưu hóa giao diện người dùng...",
-            "Khởi tạo thành công!"
-        ];
-        let currentProgress = 0;
-        let stepIndex = 0;
-        const updateLoading = () => {
-            // Tăng ngẫu nhiên để tạo cảm giác thật
-            currentProgress += Math.floor(Math.random() * 15) + 5;
-            if (currentProgress > 100) currentProgress = 100;
-            progressBar.style.width = currentProgress + '%';
-            // Cập nhật text theo mốc %
-            const targetStep = Math.floor(currentProgress / 25);
-            if (targetStep > stepIndex && stepIndex < steps.length - 1) {
-                stepIndex = targetStep;
-                statusText.innerText = steps[stepIndex];
-            }
-            if (currentProgress < 100) {
-                setTimeout(updateLoading, 300 + Math.random() * 400);
-            } else {
-                setTimeout(() => {
-                    loadingScreen.classList.add('fade-out');
-                    // Xóa hẳn khỏi DOM sau khi ẩn để nhẹ máy
-                    setTimeout(() => loadingScreen.remove(), 800);
-                }, 800);
-            }
-        };
-        // Bắt đầu chạy sau khi trang load
-        window.onload = updateLoading;
-    </script>
+
+
+
+
+
+
