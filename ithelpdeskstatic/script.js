@@ -1,9 +1,9 @@
 function toggleAccordion() {
     const content = document.getElementById('accordionContent');
     const arrow = document.getElementById('arrowIcon');
-    
+
     if (!content) return; // Bảo vệ lỗi nếu không có element
-    
+
     if (content.style.maxHeight && content.style.maxHeight !== '0px') {
         // Đóng lại
         content.style.maxHeight = '0px';
@@ -28,16 +28,16 @@ window.addEventListener('load', () => {
 const modal = document.getElementById('zaloModal');
 
 function openZaloModal() {
-    if(modal) modal.classList.remove('hidden');
+    if (modal) modal.classList.remove('hidden');
 }
 
 function closeZaloModal() {
-    if(modal) modal.classList.add('hidden');
+    if (modal) modal.classList.add('hidden');
 }
 
 // Đóng popup khi click ra ngoài vùng trắng
 if (modal) {
-    modal.addEventListener('click', function(e) {
+    modal.addEventListener('click', function (e) {
         if (e.target === modal) {
             closeZaloModal();
         }
@@ -82,18 +82,18 @@ const guides = {
      <br>Âm thanh: Chọn device là Echo Cancelling Speakerphone (Crestron Mercury).
      <br>Bước 4: Bật/Tắt Microphone, âm lượng trên màn hình điều khiển Crestron.
     `,
- 'P1504':`
+    'P1504': `
  <strong>Họp trực tuyến qua hệ thống Video Conference:</strong>
     <br>Bước 1: Sử dụng remote hoặc màn hình điều khiển Crestron bật máy chiếu.
     <br>Bước 2: Sử dụng remote Polycom hoặc màn hình điều khiển Crestron call tới địa chỉ <strong>1504@10 . 2 . 84 . 10</strong>(viết liền khi nhập)
     <br>Bước 3: Kết nối dây HDMI vào máy tính cá nhân nếu cần trình chiếu.
  `,
- 'p1505':`
+    'p1505': `
  <strong>Lưu ý: Không có thiết bị họp trực tuyến.</strong>
   <br>Bước 1: Sử dụng remote máy chiếu chọn cổng INPUT C.
   <br>Bước 2: Trên máy tính nhấn tổ hợp phím WINDOWS + K, chọn device "Meeting Room 5-15F".
  `,
-  'p1506':`
+    'p1506': `
 <strong>Họp trực tuyến qua MS Teams, Zoom,...:</strong>
 <br>Bước 1: Sử dụng remote bật tivi.
 <br>Bước 2: Kết nối phần cứng cắm các cổng tín hiệu: HDMI, USB vào máy tính.
@@ -102,7 +102,7 @@ const guides = {
 <br>Camera: Chọn device là Logitech Meetup.
 <br>Âm thanh: Chọn device là Echo Cancelling Speakerphone (Logitech MeetUp Speakerphone).
  `,
-  'p1507':`
+    'p1507': `
  <strong>Họp trực tuyến qua hệ thống Video Conference:</strong>
  <br>Bước 1: Sử dụng thiết bị cảm ứng điều khiển, thực hiện quay số tới địa chỉ: <strong>1507@10 . 2 . 84 . 10</strong>(viết liền khi nhập)
  <br>Bước 2: Kết nối dây HDMI vào máy tính nếu cần trình chiếu.
@@ -111,7 +111,7 @@ const guides = {
  <br>Bước 3: Truy cập link cuộc họp, kiểm tra thiết bị.
  <br>Bước 4: Cấu hình thông số: Camera & Âm thanh chọn nguồn tín hiệu USB PnP Camera/Audio.
  `,
-   'p1509':`
+    'p1509': `
  <strong>Hệ thống Video Conference:</strong>
   <br>Bước 2: Trên màn hình điều khiển Crestron (phía trên): Tab "Display Control" chọn POWER ON tivi; Tab "Presentation" chọn Cisco Far.
   <br>Bước 3: Trên màn hình Cisco (phía dưới) quay số tới: <strong>151@10 . 2 . 84 . 10</strong>(viết liền khi nhập)
@@ -131,52 +131,52 @@ const roomTitle = document.getElementById('roomTitle');
 
 // Mở Modal Phòng họp
 function openPHRoomModal() {
-    if(roomPHModal) roomPHModal.style.display = 'flex';
+    if (roomPHModal) roomPHModal.style.display = 'flex';
     backToRoomList(); // Reset về danh sách khi mở
 }
 
 // Đóng tất cả
 function closeAllModals() {
-    if(roomPHModal) roomPHModal.style.display = 'none';
-    if(zaloModal) zaloModal.style.display = 'none';
+    if (roomPHModal) roomPHModal.style.display = 'none';
+    if (zaloModal) zaloModal.style.display = 'none';
 }
 
 // Hiện hướng dẫn chi tiết
 function showGuide(roomId) {
-    if(roomList) roomList.style.display = 'none';
-    if(guideDetail) guideDetail.style.display = 'block';
-    if(guideText) guideText.innerHTML = guides[roomId];
-    if(roomTitle) roomTitle.innerText = "Thông tin hướng dẫn";
+    if (roomList) roomList.style.display = 'none';
+    if (guideDetail) guideDetail.style.display = 'block';
+    if (guideText) guideText.innerHTML = guides[roomId];
+    if (roomTitle) roomTitle.innerText = "Thông tin hướng dẫn";
 }
 
 // Quay lại danh sách phòng
 function backToRoomList() {
-    if(roomList) roomList.style.display = 'flex';
-    if(guideDetail) guideDetail.style.display = 'none';
-    if(roomTitle) roomTitle.innerText = "Chọn phòng họp cần hỗ trợ";
+    if (roomList) roomList.style.display = 'flex';
+    if (guideDetail) guideDetail.style.display = 'none';
+    if (roomTitle) roomTitle.innerText = "Chọn phòng họp cần hỗ trợ";
 }
 
 // Click ra ngoài để đóng
-window.onclick = function(event) {
+window.onclick = function (event) {
     if (event.target == roomPHModal || event.target == zaloModal) {
         closeAllModals();
     }
 }
 
 function toggle(id) {
-  var sec = document.getElementById('sec-' + id);
-  var chev = document.getElementById('chev-' + id);
-  
-  if(!sec) return;
-  
-  var isOpen = sec.classList.contains('open');
-  sec.classList.toggle('open', !isOpen);
-  if (chev) chev.classList.toggle('open', !isOpen);
-  
-  if (!isOpen) {
-    // Đợi animation mở xong rồi mới cuộn trang cho mượt (tương ứng với thời gian transition CSS)
-    setTimeout(function() { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 400);
-  }
+    var sec = document.getElementById('sec-' + id);
+    var chev = document.getElementById('chev-' + id);
+
+    if (!sec) return;
+
+    var isOpen = sec.classList.contains('open');
+    sec.classList.toggle('open', !isOpen);
+    if (chev) chev.classList.toggle('open', !isOpen);
+
+    if (!isOpen) {
+        // Đợi animation mở xong rồi mới cuộn trang cho mượt (tương ứng với thời gian transition CSS)
+        setTimeout(function () { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 400);
+    }
 }
 
 const progressBar = document.getElementById('progress-bar');
@@ -196,18 +196,18 @@ const updateLoading = () => {
     // Tăng ngẫu nhiên để tạo cảm giác thật
     currentProgress += Math.floor(Math.random() * 15) + 5;
     if (currentProgress > 100) currentProgress = 100;
-    if(progressBar) progressBar.style.width = currentProgress + '%';
+    if (progressBar) progressBar.style.width = currentProgress + '%';
     // Cập nhật text theo mốc %
     const targetStep = Math.floor(currentProgress / 25);
     if (targetStep > stepIndex && stepIndex < steps.length - 1) {
         stepIndex = targetStep;
-        if(statusText) statusText.innerText = steps[stepIndex];
+        if (statusText) statusText.innerText = steps[stepIndex];
     }
     if (currentProgress < 100) {
         setTimeout(updateLoading, 300 + Math.random() * 400);
     } else {
         setTimeout(() => {
-            if(loadingScreen) {
+            if (loadingScreen) {
                 loadingScreen.classList.add('fade-out');
                 // Xóa hẳn khỏi DOM sau khi ẩn để nhẹ máy
                 setTimeout(() => loadingScreen.remove(), 800);
@@ -215,12 +215,257 @@ const updateLoading = () => {
         }, 800);
     }
 };
+
+// images
+let imageStates = {}; // Lưu trữ base64 của các ảnh
+
 // Bắt đầu chạy sau khi trang load
 window.addEventListener('load', () => {
     updateLoading();
     initDarkMode();
+
+    // Khôi phục dữ liệu ảnh đã lưu
+    loadSavedImages();
+
+    // Chỉ kích hoạt tính năng thêm/đổi ảnh nếu đang ở trang admin.html
+    if (window.location.pathname.includes('admin.html')) {
+        initImageUploads();
+        createAdminPanel();
+    }
+
     initLightbox();
 });
+
+// ==========================================
+// 5. THÊM HÌNH ẢNH TRỰC TIẾP TRÊN TRANG
+// ==========================================
+function initImageUploads() {
+    // Chỉ chọn các ảnh nằm trong section-body (các bước hướng dẫn), bỏ qua lightbox
+    const images = document.querySelectorAll('.section-body img:not(#lightboxImg)');
+
+    images.forEach(img => {
+        // Nếu ảnh này đã có wrapper (tránh chạy 2 lần)
+        if (img.parentElement.classList.contains('img-preview-container')) return;
+
+        // Tạo khung chứa wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-upload-wrapper';
+        wrapper.style.margin = '12px 0';
+
+        // Chèn wrapper vào trước image trong DOM
+        img.parentNode.insertBefore(wrapper, img);
+
+        // Input file ẩn
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.className = 'hidden';
+
+        // Container chứa các nút bấm
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'flex gap-2 mb-3';
+
+        // Icon SVG
+        const addIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        const changeIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>';
+        const removeIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+
+        // Kiểm tra xem ảnh gốc có src không để xác định trạng thái ban đầu
+        // Chúng ta sẽ cho phép bắt đầu với giao diện rỗng để người dùng tự thêm hình
+        // Lưu lại src gốc phòng hờ
+        const originalSrc = img.src;
+        // Ẩn ảnh đi để tạo giao diện khung trống (đợi user upload)
+        img.src = '';
+
+        // Nút Thêm / Đổi ảnh
+        const addBtn = document.createElement('button');
+        addBtn.className = 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 px-3 py-1.5 rounded text-sm transition flex items-center gap-1.5 font-medium shadow-sm';
+        addBtn.innerHTML = addIcon + ' <span>Thêm hình ảnh</span>';
+        addBtn.onclick = () => fileInput.click();
+
+        // Nút Xóa ảnh
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded text-sm transition flex items-center gap-1.5 font-medium shadow-sm';
+        removeBtn.innerHTML = removeIcon + ' <span>Xóa ảnh</span>';
+        removeBtn.style.display = 'none'; // Mặc định ẩn vì chưa có ảnh
+
+        btnContainer.appendChild(addBtn);
+        btnContainer.appendChild(removeBtn);
+
+        wrapper.appendChild(fileInput);
+        wrapper.appendChild(btnContainer);
+
+        // Khung bọc ảnh
+        const previewContainer = document.createElement('div');
+        previewContainer.className = 'img-preview-container relative inline-block';
+        previewContainer.style.display = 'none'; // Ẩn khung ảnh ban đầu
+
+        wrapper.appendChild(previewContainer);
+        // Đưa ảnh gốc vào trong container
+        previewContainer.appendChild(img);
+
+        // Thêm một số style cho ảnh để trông đẹp hơn
+        if (!img.classList.contains('rounded')) img.classList.add('rounded');
+        img.classList.add('shadow-md', 'border', 'border-gray-200');
+
+        // Cập nhật giao diện nếu ảnh đã được load từ localStorage/JSON
+        const updateUIForSavedImage = () => {
+            const index = Array.from(images).indexOf(img);
+            if (imageStates[index]) {
+                img.src = imageStates[index];
+                previewContainer.style.display = 'block';
+                removeBtn.style.display = 'flex';
+                addBtn.innerHTML = changeIcon + ' <span>Đổi ảnh khác</span>';
+            }
+        };
+        // Chạy hàm kiểm tra ngay sau khi tạo
+        updateUIForSavedImage();
+
+        // Xử lý sự kiện khi chọn file
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64 = event.target.result;
+                    img.src = base64;
+
+                    // Lưu vào state và localStorage
+                    const index = Array.from(images).indexOf(img);
+                    imageStates[index] = base64;
+                    saveToLocalStorage();
+
+                    previewContainer.style.display = 'block';
+                    removeBtn.style.display = 'flex';
+                    addBtn.innerHTML = changeIcon + ' <span>Đổi ảnh khác</span>';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Xử lý sự kiện khi xóa ảnh
+        removeBtn.addEventListener('click', () => {
+            img.src = '';
+            fileInput.value = '';
+            previewContainer.style.display = 'none';
+            removeBtn.style.display = 'none';
+            addBtn.innerHTML = addIcon + ' <span>Thêm hình ảnh</span>';
+
+            // Xóa khỏi state và localStorage
+            const index = Array.from(images).indexOf(img);
+            delete imageStates[index];
+            saveToLocalStorage();
+        });
+    });
+}
+
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem('helpdesk_images', JSON.stringify(imageStates));
+    } catch (e) {
+        console.warn("Local storage quota exceeded");
+        alert("Dung lượng bộ nhớ đã đầy do ảnh quá lớn! Hãy dùng tính năng Xuất file JSON để lưu trữ.");
+    }
+}
+
+function loadSavedImages() {
+    const images = document.querySelectorAll('.section-body img:not(#lightboxImg)');
+
+    // Ưu tiên load từ localStorage
+    const localData = localStorage.getItem('helpdesk_images');
+    if (localData) {
+        try {
+            const parsed = JSON.parse(localData);
+            Object.assign(imageStates, parsed);
+            applyImageData(images);
+            return; // Đã load từ local thì không cần fetch JSON nữa
+        } catch (e) { }
+    }
+
+    // Nếu không có trong localStorage, thử tìm file data.json (nếu đã được upload lên host)
+    fetch('data.json')
+        .then(res => {
+            if (res.ok) return res.json();
+        })
+        .then(data => {
+            if (data) {
+                Object.assign(imageStates, data);
+                applyImageData(images);
+            }
+        })
+        .catch(err => {
+            // File data.json có thể không tồn tại, bỏ qua
+        });
+}
+
+function applyImageData(images) {
+    images.forEach((img, index) => {
+        if (imageStates[index]) {
+            img.src = imageStates[index];
+            // Đảm bảo ảnh hiển thị trên trang index.html
+            img.style.display = 'block';
+        }
+    });
+}
+
+// Bảng điều khiển Admin để Xuất/Nhập JSON
+function createAdminPanel() {
+    const panel = document.createElement('div');
+    panel.className = 'fixed bottom-6 left-6 bg-white p-4 rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col gap-2 transition-all';
+    panel.innerHTML = `
+        <div class="flex justify-between items-center mb-1 border-b pb-1">
+            <h3 class="text-sm font-bold text-gray-700">🛠️ Công cụ Admin</h3>
+        </div>
+        <button id="btnExportJson" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition font-medium text-left flex items-center gap-2">
+            <span>💾</span> Tải xuống JSON
+        </button>
+        <button id="btnImportJson" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition font-medium text-left flex items-center gap-2" onclick="document.getElementById('importJsonInput').click()">
+            <span>📂</span> Tải lên JSON
+        </button>
+        <button id="btnClearData" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2 rounded text-sm transition font-medium text-left flex items-center gap-2 mt-2">
+            <span>🗑️</span> Xóa dữ liệu tạm
+        </button>
+        <input type="file" id="importJsonInput" accept=".json" class="hidden">
+        <p class="text-[10px] text-gray-400 mt-1 max-w-[150px] leading-tight">Dữ liệu được tự động lưu tạm trên trình duyệt.</p>
+    `;
+    document.body.appendChild(panel);
+
+    // Xử lý Xuất JSON
+    document.getElementById('btnExportJson').addEventListener('click', () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(imageStates));
+        const dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", "data.json");
+        dlAnchorElem.click();
+        dlAnchorElem.remove();
+    });
+
+    // Xử lý Nhập JSON
+    document.getElementById('importJsonInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const parsed = JSON.parse(event.target.result);
+                localStorage.setItem('helpdesk_images', JSON.stringify(parsed));
+                alert("Đã tải dữ liệu thành công! Trang sẽ tự tải lại.");
+                location.reload();
+            } catch (err) {
+                alert("File JSON không hợp lệ!");
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    // Xử lý Xóa dữ liệu
+    document.getElementById('btnClearData').addEventListener('click', () => {
+        if (confirm('Bạn có chắc muốn xóa toàn bộ dữ liệu ảnh đang làm việc?')) {
+            localStorage.removeItem('helpdesk_images');
+            location.reload();
+        }
+    });
+}
 
 // ==========================================
 // 1. CHẾ ĐỘ TỐI (DARK MODE)
@@ -232,11 +477,11 @@ function initDarkMode() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
-        if(themeToggle) themeToggle.innerText = '☀️';
+        if (themeToggle) themeToggle.innerText = '☀️';
     }
 }
 
-if(themeToggle) {
+if (themeToggle) {
     themeToggle.addEventListener('click', () => {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         if (currentTheme === 'dark') {
@@ -255,15 +500,15 @@ if(themeToggle) {
 // 2. TÌM KIẾM NHANH (LIVE SEARCH)
 // ==========================================
 const searchInput = document.getElementById('searchInput');
-if(searchInput) {
-    searchInput.addEventListener('input', function() {
+if (searchInput) {
+    searchInput.addEventListener('input', function () {
         const filter = this.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        
+
         // Lọc trong TOC
         const tocItems = document.querySelectorAll('.toc-item');
         tocItems.forEach(item => {
             const text = item.innerText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            if(text.includes(filter)) {
+            if (text.includes(filter)) {
                 item.style.display = 'flex';
             } else {
                 item.style.display = 'none';
@@ -274,7 +519,7 @@ if(searchInput) {
         const sections = document.querySelectorAll('.section');
         sections.forEach(sec => {
             const text = sec.innerText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            if(text.includes(filter)) {
+            if (text.includes(filter)) {
                 sec.style.display = 'grid';
             } else {
                 sec.style.display = 'none';
@@ -306,7 +551,7 @@ const lightboxImg = document.getElementById('lightboxImg');
 function initLightbox() {
     const images = document.querySelectorAll('.section-body img');
     images.forEach(img => {
-        img.addEventListener('click', function() {
+        img.addEventListener('click', function () {
             lightboxImg.src = this.src;
             lightbox.classList.remove('hidden');
             // Cần 1 chút timeout để transition CSS chạy
