@@ -1,0 +1,959 @@
+﻿<h2 class="sr-only">Hướng dẫn sử dụng hệ thống CNTT PV GAS - tài liệu tương tác đầy đủ 11 mục</h2>
+
+<!-- Mình dùng Tailwind CSS để style cho giống ảnh của bạn nhanh nhất -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
+
+<!-- Loading Screen -->
+<div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center gradient-bg text-white">
+
+  <!-- Animation chính -->
+  <div class="loader-ring flex items-center justify-center">
+    <div class="spinner"></div>
+    <!-- Chữ PV GAS nằm ở tâm -->
+    <div class="absolute flex flex-col items-center">
+      <span class="font-black text-lg tracking-tighter italic">PV GAS</span>
+      <span class="text-[8px] tracking-[0.3em] opacity-60 uppercase font-light">KTCN</span>
+    </div>
+  </div>
+  <!-- Thông tin trạng thái -->
+  <div class="mt-12 text-center px-6 max-w-sm">
+    <h1 class="text-lg md:text-xl font-bold tracking-widest mb-3 uppercase">
+      Hệ Thống Quản Trị CNTT
+    </h1>
+    <div class="flex items-center justify-center gap-2">
+      <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></span>
+      <p id="status-text" class="text-blue-100 text-sm font-light italic">
+        Đang thiết lập kết nối an toàn...
+      </p>
+    </div>
+  </div>
+  <!-- Thanh tiến trình -->
+  <div class="mt-8 w-64 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+    <div id="progress-bar"
+      class="h-full bg-gradient-to-r from-blue-400 to-white w-0 transition-all duration-300 ease-out shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+    </div>
+  </div>
+
+  <!-- Footer Info -->
+  <div class="absolute bottom-8 flex flex-col items-center gap-1 opacity-40">
+    <div class="h-[1px] w-12 bg-white mb-2"></div>
+    <p class="text-[9px] uppercase tracking-[0.4em]">PV Gas</p>
+    <p class="text-[8px]">Ban Kỹ Thuật Công Nghệ © 2026</p>
+  </div>
+</div>
+
+<div class="guide-wrap">
+
+  <div class="guide-header">
+    <button id="themeToggle"
+      class="absolute top-6 right-6 md:top-8 md:right-8 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full p-2 text-white backdrop-blur-sm transition-all z-10 flex items-center justify-center w-10 h-10 shadow-lg"
+      title="Giao diện tối">
+      🌙
+    </button>
+    <div class="header-badge"><span class="header-dot"></span>Ban Kỹ Thuật Công Nghệ</div>
+    <h1>Hướng dẫn Cài đặt &amp; Sử dụng<br>Hệ thống CNTT PV GAS</h1>
+    <div class="gold-line"></div>
+    <p>Tài liệu hướng dẫn nội bộ dành cho nhân viên PV Gas</p>
+    <div class="header-meta">
+      <div class="meta-item">
+        <div class="meta-icon">📋</div>11 hướng dẫn
+      </div>
+      <div class="meta-item">
+        <div class="meta-icon">📱</div>iOS &amp; Android
+      </div>
+      <div class="meta-item">
+        <div class="meta-icon">💻</div>Windows / Mac
+      </div>
+      <div class="meta-item">
+        <div class="meta-icon">🔒</div>VPN &amp; MFA
+      </div>
+    </div>
+  </div>
+
+  <div class="toc-panel">
+    <div class="toc-header flex justify-between items-center flex-wrap gap-2">
+      <div><span>▤</span> Mục lục</div>
+      <div class="relative">
+        <input type="text" id="searchInput" placeholder="Tìm hướng dẫn..."
+          class="text-xs px-3 py-1.5 rounded-full border border-blue-200 outline-none text-gray-700 bg-white shadow-sm focus:border-blue-400 w-48 transition-all focus:w-56 focus:ring-2 ring-blue-100">
+        <span class="absolute right-3 top-1.5 text-gray-400 text-xs">🔍</span>
+      </div>
+    </div>
+    <div class="toc-grid">
+      <div class="toc-item" onclick="toggle('s1')">
+        <div class="toc-num">1</div>
+        <div class="toc-text">Kết nối WiFi (iOS &amp; Android)</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s2')">
+        <div class="toc-num">2</div>
+        <div class="toc-text">Kết nối VPN Global</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s3')">
+        <div class="toc-num">3</div>
+        <div class="toc-text">Cài đặt lại MFA (QR Code)</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s4')">
+        <div class="toc-num">4</div>
+        <div class="toc-text">Cài đặt ứng dụng PVGAS</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s5')">
+        <div class="toc-num">5</div>
+        <div class="toc-text">Cài đặt Microsoft Teams</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s6')">
+        <div class="toc-num">6</div>
+        <div class="toc-text">Đăng nhập ngoài công ty</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s7')">
+        <div class="toc-num">7</div>
+        <div class="toc-text">Archive email &amp; kiểm tra mail</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s8')">
+        <div class="toc-num">8</div>
+        <div class="toc-text">Thiết bị phòng họp (Polycom)</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s9')">
+        <div class="toc-num">9</div>
+        <div class="toc-text">Tạo lịch họp Teams</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s10')">
+        <div class="toc-num">10</div>
+        <div class="toc-text">Kiểm tra bộ gõ tiếng Việt</div>
+      </div>
+      <div class="toc-item" onclick="toggle('s11')">
+        <div class="toc-num">11</div>
+        <div class="toc-text">Kết nối họp UCKC tại TTĐĐK</div>
+      </div>
+      <div class="toc-item" style="background:transparent;cursor:default;"></div>
+    </div>
+  </div>
+
+  <!-- Section 1 -->
+  <div class="section" id="sec-s1">
+    <div class="section-header" onclick="toggle('s1')">
+      <div class="section-num">1</div>
+      <div class="section-title">Kết nối WiFi (iOS &amp; Android)</div>
+      <div class="section-tags"><span class="tag tag-ios">iOS</span><span class="tag tag-android">Android</span></div>
+      <span class="chevron" id="chev-s1">▶</span>
+    </div>
+    <div class="section-body" id="body-s1">
+      <div class="desc-box">Hướng dẫn kết nối thiết bị di động vào mạng WiFi nội bộ <strong>PVGAS Wifi</strong> của Công
+        ty.</div>
+      <div class="steps-label">Các bước thực hiện</div>
+      <div class="step">
+        <div class="step-circle">1</div>
+        <div class="step-content">
+          <div class="step-text">Trên thiết bị di động, mở <b>Cài đặt (Settings)</b>.</div>
+        </div>
+      </div>
+      <img style="width: 50%; height: auto;" src="images/sec11.jpg">
+      <div class="step">
+        <div class="step-circle">2</div>
+        <div class="step-content">
+          <div class="step-text">Chọn <b>Wi-Fi</b>, sau đó chọn mạng <code>PVGAS Wifi</code>.</div>
+        </div>
+      </div>
+      <img style="width: 50%; height: auto;" src="images/sec12.jpg">
+      <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-content">
+          <div class="step-text">Nhập <b>Tên đăng nhập (Username)</b> và <b>Mật khẩu (Password)</b> được cấp bởi IT.
+          </div>
+        </div>
+      </div>
+      <img style="width: 50%; height: auto;" src="images/sec13.jpg">
+      <div class="step">
+        <div class="step-circle">4</div>
+        <div class="step-content">
+          <div class="step-text">Nếu hệ thống yêu cầu, nhấn <b>Tin cậy (Trust)</b> để xác nhận chứng chỉ kết nối.</div>
+        </div>
+      </div>
+      <img style="width: 50%; height: auto;" src="images/sec14.jpg">
+      <div class="step">
+        <div class="step-circle">5</div>
+        <div class="step-content">
+          <div class="step-text">Khi thiết bị hiển thị trạng thái <b>Đã kết nối</b> — hoàn tất.</div>
+        </div>
+      </div>
+      <img style="width: 50%; height: auto;" src="images/sec15.jpg">
+    </div>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="section" id="sec-s2">
+    <div class="section-header" onclick="toggle('s2')">
+      <div class="section-num">2</div>
+      <div class="section-title">Kết nối VPN Global (GlobalProtect)</div>
+      <div class="section-tags"><span class="tag tag-pc">PC</span></div>
+      <span class="chevron" id="chev-s2">▶</span>
+    </div>
+    <div class="section-body" id="body-s2">
+      <div class="desc-box">Dùng VPN <strong>GlobalProtect</strong> để truy cập hệ thống nội bộ khi làm việc
+        <strong>ngoài văn phòng</strong> (không cần mạng công ty).</div>
+      <div class="steps-label">Các bước thực hiện</div>
+      <div class="step">
+        <div class="step-circle">1</div>
+        <div class="step-content">
+          <div class="step-text">Mở ứng dụng <b>GlobalProtect VPN</b> trên thiết bị.</div>
+        </div>
+      </div>
+      <img style="width: 50%; height: auto;" src="images/sec21.jpg">
+      <div class="step">
+        <div class="step-circle">2</div>
+        <div class="step-content">
+          <div class="step-text">Tại mục <b>Portal</b>, nhập địa chỉ: <code>remote.pvgas.com.vn</code><br><span
+              style="font-size:12.5px;color:var(--text-muted);font-style:italic;">Nếu thiết bị đã thiết lập sẵn, ứng
+              dụng sẽ tự kết nối.</span></div>
+        </div>
+      </div>
+      |<img style="width: 50%; height: auto;" src="images/sec22.jpg">
+      <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-content">
+          <div class="step-text">Nhập <b>tài khoản công ty</b> và nhấn <b>Connect</b>.</div>
+        </div>
+      </div>
+      <img style="width: 50%; height: auto;" src="images/sec23.jpg">
+      <div class="step">
+        <div class="step-circle">4</div>
+        <div class="step-content">
+          <div class="step-text">Khi trạng thái hiển thị <b>Connected</b> — kết nối VPN thành công.</div>
+        </div>
+      </div>
+      <img style="width: 50%; height: auto;" src="images/sec24.jpg">
+      <div class="steps-label" style="padding-top:6px;">Sau khi kết nối, có thể truy cập</div>
+      <div class="step" style="border-top:none;padding-top:4px;padding-bottom:14px;">
+        <div class="step-circle" style="background:var(--gold);">✓</div>
+        <div class="step-content">
+          <div class="step-sub">
+            <div class="sub-item">
+              <div class="sub-dot"></div><span>Email nội bộ</span>
+            </div>
+            <div class="sub-item">
+              <div class="sub-dot"></div><span>Hệ thống Quản lý công việc (QLCV)</span>
+            </div>
+            <div class="sub-item">
+              <div class="sub-dot"></div><span>Chữ ký số (CKS)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="section" id="sec-s3">
+    <div class="section-header" onclick="toggle('s3')">
+      <div class="section-num">3</div>
+      <div class="section-title">Cài đặt lại MFA (Quét QR Code)</div>
+      <div class="section-tags"><span class="tag tag-mobile">Mobile</span></div>
+      <span class="chevron" id="chev-s3">▶</span>
+    </div>
+    <div class="section-body" id="body-s3">
+      <div class="desc-box">Thiết lập xác thực đa lớp <strong>(MFA)</strong> để bảo vệ tài khoản công ty. Thực hiện khi
+        đổi điện thoại hoặc cài lại ứng dụng.</div>
+      <div class="steps-label">Các bước thực hiện</div>
+      <div class="step">
+        <div class="step-circle">1</div>
+        <div class="step-content">
+          <div class="step-text">Truy cập trang quản lý tài khoản Microsoft của công ty.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">2</div>
+        <div class="step-content">
+          <div class="step-text">Chọn <b>Add Authentication Method</b>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-content">
+          <div class="step-text">Chọn <b>Authenticator App</b>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">4</div>
+        <div class="step-content">
+          <div class="step-text">Mở ứng dụng <b>Microsoft Authenticator</b> trên điện thoại.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">5</div>
+        <div class="step-content">
+          <div class="step-text">Chọn <b>Add Account</b> → quét QR code hiển thị trên màn hình máy tính.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">6</div>
+        <div class="step-content">
+          <div class="step-text">Nhập <b>mã xác nhận 6 số</b> từ ứng dụng để hoàn tất.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4 -->
+  <div class="section" id="sec-s4">
+    <div class="section-header" onclick="toggle('s4')">
+      <div class="section-num">4</div>
+      <div class="section-title">Cài đặt ứng dụng PVGAS</div>
+      <div class="section-tags"><span class="tag tag-ios">iOS</span><span class="tag tag-android">Android</span></div>
+      <span class="chevron" id="chev-s4">▶</span>
+    </div>
+    <div class="section-body" id="body-s4">
+      <div class="desc-box">Cài đặt bộ ứng dụng PV GAS trên điện thoại: <strong>QLCV</strong> (Quản lý công việc),
+        <strong>CKS</strong> (Chữ ký số), <strong>MIS</strong> (Hệ thống thông tin quản lý).</div>
+
+      <div class="subsection">
+        <div class="subsection-title">Bước 1 — Truy cập cổng cài đặt</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Mở trình duyệt (Safari, Chrome) trên điện thoại.</div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec41.jpg">
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Nhập địa chỉ: <code>app.pvgas.com.vn</code></div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec42.jpg">
+        <div class="step">
+          <div class="step-circle">3</div>
+          <div class="step-content">
+            <div class="step-text">Đăng nhập bằng <b>tài khoản công ty</b>, nhấn <b>Tiếp theo (Next)</b>.</div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec43.jpg">
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Bước 2 — Xác thực tài khoản</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Hệ thống gửi <b>thông báo số xác thực</b> qua ứng dụng <b>Authenticator</b>.</div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec44.jpg">
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Nhấn vào thông báo và nhập <b>mã số hiển thị</b> để xác thực.</div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec45.jpg">
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Bước 3 — Lưu thông tin đăng nhập</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Tích chọn theo hướng dẫn và nhấn <b>Có (Yes)</b> để lưu thông tin trên thiết bị.
+            </div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec46.jpg">
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Bước 4 — Cài đặt các ứng dụng</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Cài đặt lần lượt 3 ứng dụng:</div>
+            <div class="step-sub">
+              <div class="sub-item">
+                <div class="sub-dot"></div><span><b>PV GAS QLCV</b> — Quản lý công việc</span>
+              </div>
+              <div class="sub-item">
+                <div class="sub-dot"></div><span><b>PV GAS CKS</b> — Chữ ký số</span>
+              </div>
+              <div class="sub-item">
+                <div class="sub-dot"></div><span><b>PV GAS MIS</b> — Hệ thống thông tin quản lý</span>
+              </div>
+            </div>
+            <img style="width: 50%; height: auto;" src="images/sec47.jpg">
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Thực hiện cài đặt theo hướng dẫn hiển thị trên màn hình.</div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec48.jpg">
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Bước 5 — Tin cậy ứng dụng (chỉ iOS)</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Vào: <b>Cài đặt → Cài đặt chung → Quản lý VPN &amp; Thiết bị</b>.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Chọn <b>PETROVIETNAM GAS JOINT STOCK CORPORATION</b>.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">3</div>
+          <div class="step-content">
+            <div class="step-text">Nhấn <b>Tin cậy ứng dụng</b> để hoàn tất.</div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec49.jpg">
+      </div>
+      <div class="note">✅ Sau khi hoàn tất, bạn có thể đăng nhập và sử dụng đầy đủ các ứng dụng PV GAS trên điện thoại.
+      </div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Section 5 -->
+  <div class="section" id="sec-s5">
+    <div class="section-header" onclick="toggle('s5')">
+      <div class="section-num">5</div>
+      <div class="section-title">Cài đặt Microsoft Teams</div>
+      <div class="section-tags"><span class="tag tag-mobile">Mobile</span><span class="tag tag-pc">PC</span></div>
+      <span class="chevron" id="chev-s5">▶</span>
+    </div>
+    <div class="section-body" id="body-s5">
+      <div class="desc-box">Cài đặt và đăng nhập <strong>Microsoft Teams</strong> để trao đổi công việc và tham gia họp
+        trực tuyến bằng tài khoản PV GAS.</div>
+
+      <div class="subsection">
+        <div class="subsection-title">A — Cài đặt trên điện thoại</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Tải <b>Microsoft Teams</b> từ <b>App Store</b> (iOS) hoặc <b>Google Play</b>
+              (Android).</div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec51.jpg">
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Mở ứng dụng, đăng nhập bằng <b>tài khoản PV GAS</b> (email công ty).</div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec52.jpg">
+        <div class="step">
+          <div class="step-circle">3</div>
+          <div class="step-content">
+            <div class="step-text">Xác thực qua ứng dụng <b>Authenticator</b>: nhấn <b>Có (Yes)</b> trên thông báo.
+            </div>
+          </div>
+        </div>
+        <img style="width: 50%; height: auto;" src="images/sec53.jpg">
+        <div class="step">
+          <div class="step-circle">4</div>
+          <div class="step-content">
+            <div class="step-text">Đăng nhập thành công — bắt đầu sử dụng Teams.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">B — Cài đặt trên máy tính</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Tải Teams từ trang chính thức:</div>
+            <div class="url-list"><span class="url-chip">🔗 microsoft.com/microsoft-teams</span></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Cài đặt và mở ứng dụng, đăng nhập bằng <b>tài khoản PV GAS</b>.</div>
+          </div>
+        </div>
+        <img style="width: 80%; height: auto;" src="images/sec54.jpg">
+        <div class="step">
+          <div class="step-circle">3</div>
+          <div class="step-content">
+            <div class="step-text">Xác thực qua <b>Authenticator</b> (nếu yêu cầu).</div>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <img class="w-1/2 h-auto object-cover rounded" src="images/sec55.jpg">
+          <img class="w-1/2 h-auto object-cover rounded" src="images/sec56.jpg">
+        </div>
+        <div class="step">
+          <div class="step-circle">4</div>
+          <div class="step-content">
+            <div class="step-text">Tại màn hình xác nhận cuối, nhấn <b>"Yes"</b> để duy trì đăng nhập.</div>
+          </div>
+        </div>
+        <img style="width: 80%; height: auto;" src="images/sec57.jpg">
+      </div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Section 6 -->
+  <div class="section" id="sec-s6">
+    <div class="section-header" onclick="toggle('s6')">
+      <div class="section-num">6</div>
+      <div class="section-title">Đăng nhập MAIL – QLCV – CKS ngoài công ty</div>
+      <div class="section-tags"><span class="tag tag-pc">PC</span><span class="tag tag-mobile">Mobile</span></div>
+      <span class="chevron" id="chev-s6">▶</span>
+    </div>
+    <div class="section-body" id="body-s6">
+      <div class="desc-box">Truy cập các hệ thống PV GAS từ <strong>bên ngoài công ty</strong>, không cần kết nối VPN,
+        qua trình duyệt web.</div>
+      <div class="steps-label">Địa chỉ truy cập</div>
+      <div class="url-list" style="padding-top:8px;">
+        <span class="url-chip">🔗 qlcv.pvgas.com.vn — Quản lý công việc</span>
+        <span class="url-chip">🔗 cks.pvgas.com.vn — Chữ ký số</span>
+        <span class="url-chip">🔗 mail.pvgas.com.vn — Hệ thống Mail</span>
+      </div>
+      <div class="steps-label">Các bước thực hiện</div>
+      <div class="step">
+        <div class="step-circle">1</div>
+        <div class="step-content">
+          <div class="step-text">Mở <b>Google Chrome</b>, truy cập địa chỉ tương ứng ở trên.</div>
+        </div>
+      </div>
+      <img style="width: 50%; height: auto;" src="">
+      <div class="step">
+        <div class="step-circle">2</div>
+        <div class="step-content">
+          <div class="step-text">Đăng nhập bằng <b>tài khoản PV GAS</b> được cấp.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-content">
+          <div class="step-text">Hoàn tất <b>xác thực MFA</b>: kiểm tra thông báo từ ứng dụng <b>Authenticator</b>, nhập
+            hoặc xác nhận mã.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">4</div>
+        <div class="step-content">
+          <div class="step-text">Tại màn hình xác nhận, chọn <b>lưu thông tin đăng nhập</b> để không phải xác thực lại
+            lần sau.</div>
+        </div>
+      </div>
+      <div class="note">✅ Hoàn tất — có thể dùng MAIL, QLCV và CKS bình thường từ bên ngoài công ty.</div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Section 7 -->
+  <div class="section" id="sec-s7">
+    <div class="section-header" onclick="toggle('s7')">
+      <div class="section-num">7</div>
+      <div class="section-title">Lưu trữ (Archive) email trong Outlook</div>
+      <div class="section-tags"><span class="tag tag-pc">PC</span></div>
+      <span class="chevron" id="chev-s7">▶</span>
+    </div>
+    <div class="section-body" id="body-s7">
+      <div class="desc-box">Lưu trữ email cũ để <strong>giải phóng dung lượng hộp thư</strong> và tìm lại email đã lưu
+        khi cần.</div>
+
+      <div class="subsection">
+        <div class="subsection-title">A — Thực hiện Archive email</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Mở <b>Microsoft Outlook</b> trên máy tính.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Trên thanh menu, chọn <b>File</b>.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">3</div>
+          <div class="step-content">
+            <div class="step-text">Chọn <b>Tools</b> → <b>Clean Up Old Items</b>.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">4</div>
+          <div class="step-content">
+            <div class="step-text">Tại cửa sổ Archive: chỉnh các mục theo hướng dẫn, chọn ngày gần nhất làm mốc lưu trữ.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">5</div>
+          <div class="step-content">
+            <div class="step-text">Nhấn <b>OK</b> để bắt đầu lưu trữ, sau đó nhấn <b>Esc</b> để trở về hộp thư.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">B — Tìm email đã Archive</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Các email cũ sẽ nằm trong khu vực <b>Archives</b> ở thanh thư mục bên trái.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Nhấn vào <b>mũi tên (▶)</b> trước mục <b>Archives</b> để mở rộng và xem các thư mục
+              con.</div>
+          </div>
+        </div>
+      </div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Section 8 -->
+  <div class="section" id="sec-s8">
+    <div class="section-header" onclick="toggle('s8')">
+      <div class="section-num">8</div>
+      <div class="section-title">Thiết bị phòng họp (Polycom &amp; Teams)</div>
+      <div class="section-tags"><span class="tag tag-pc">Phòng họp</span></div>
+      <span class="chevron" id="chev-s8">▶</span>
+    </div>
+    <div class="section-body" id="body-s8">
+      <div class="desc-box">Hướng dẫn sử dụng hệ thống họp trực tuyến tại các <strong>phòng họp tầng 14–15F</strong> của
+        PV GAS.</div>
+      <div class="steps-label">Lưu ý sử dụng</div>
+      <div class="step">
+        <div class="step-circle">!</div>
+        <div class="step-content">
+          <div class="step-text">Sử dụng remote điều khiển <b>Polycom</b> để khởi động thiết bị và chọn nguồn tín hiệu.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">!</div>
+        <div class="step-content">
+          <div class="step-text">Tham khảo sơ đồ nút điều khiển trên remote được in sẵn tại mỗi phòng họp.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">!</div>
+        <div class="step-content">
+          <div class="step-text">Để được hỗ trợ chi tiết, liên hệ Ban CNTT hoặc nhấn nút bên dưới:</div>
+        </div>
+      </div>
+      <div style="padding:10px 20px 16px;">
+        <button class="ask-btn" onclick="openPHRoomModal()">Hỏi hướng dẫn chi tiết ↗</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 1: CHỌN PHÒNG HỌP -->
+  <div id="roomModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="roomTitle">Chọn phòng họp cần hỗ trợ</h3>
+        <button class="close-btn" onclick="closeAllModals()">×</button>
+      </div>
+
+      <!-- Danh sách phòng họp -->
+      <div id="roomList" class="list-options">
+        <div class="option-item" onclick="showGuide('p1401')">
+          <span>Phòng họp 14F</span>
+          <span>Tầng 14</span>
+        </div>
+        <div class="option-item" onclick="showGuide('p1501')">
+          <span>Phòng họp 01-15F</span>
+          <span>Tầng 15</span>
+        </div>
+        <div class="option-item" onclick="showGuide('p1502')">
+          <span>Phòng họp 02-15F</span>
+          <span>Tầng 15</span>
+        </div>
+        <div class="option-item" onclick="showGuide('p1504')">
+          <span>Phòng họp 04-15F</span>
+          <span>Tầng 15</span>
+        </div>
+        <div class="option-item" onclick="showGuide('p1505')">
+          <span>Phòng họp 05-15F</span>
+          <span>Tầng 15</span>
+        </div>
+        <div class="option-item" onclick="showGuide('p1506')">
+          <span>Phòng họp 06-15F</span>
+          <span>Tầng 15</span>
+        </div>
+        <div class="option-item" onclick="showGuide('p1507')">
+          <span>Phòng họp 07-15F</span>
+          <span>Tầng 15</span>
+        </div>
+        <div class="option-item" onclick="showGuide('p1509')">
+          <span>Phòng họp 09-15F</span>
+          <span>Tầng 15</span>
+        </div>
+      </div>
+
+      <!-- Nội dung chi tiết (Mặc định ẩn) -->
+      <div id="guideDetail" style="display: none;">
+        <div class="back-btn" onclick="backToRoomList()">← Quay lại danh sách</div>
+        <div id="guideText" class="guide-content" style="display: block;">
+          <!-- Nội dung sẽ được thay đổi bằng JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 9 -->
+  <div class="section" id="sec-s9">
+    <div class="section-header" onclick="toggle('s9')">
+      <div class="section-num">9</div>
+      <div class="section-title">Tạo lịch họp trên Microsoft Teams</div>
+      <div class="section-tags"><span class="tag tag-pc">PC</span><span class="tag tag-mobile">Mobile</span></div>
+      <span class="chevron" id="chev-s9">▶</span>
+    </div>
+    <div class="section-body" id="body-s9">
+      <div class="desc-box">Tạo và gửi lời mời họp Teams đến các thành viên tham gia trực tiếp từ ứng dụng.</div>
+      <div class="steps-label">Các bước thực hiện</div>
+      <div class="step">
+        <div class="step-circle">1</div>
+        <div class="step-content">
+          <div class="step-text">Mở <b>Microsoft Teams</b>, chọn <b>Calendar (Lịch)</b> ở thanh menu bên trái.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">2</div>
+        <div class="step-content">
+          <div class="step-text">Nhấn vào <b>khung giờ</b> muốn tạo họp, hoặc nhấn nút <b>New meeting (Cuộc họp
+              mới)</b>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-content">
+          <div class="step-text">Điền đầy đủ thông tin cuộc họp:</div>
+          <div class="step-sub">
+            <div class="sub-item">
+              <div class="sub-dot"></div><span><b>Tiêu đề</b> cuộc họp (Title)</span>
+            </div>
+            <div class="sub-item">
+              <div class="sub-dot"></div><span><b>Ngày, giờ</b> bắt đầu và kết thúc</span>
+            </div>
+            <div class="sub-item">
+              <div class="sub-dot"></div><span><b>Người tham gia</b> (Required / Optional attendees)</span>
+            </div>
+            <div class="sub-item">
+              <div class="sub-dot"></div><span><b>Nội dung</b> (Agenda, ghi chú nếu có)</span>
+            </div>
+            <div class="sub-item">
+              <div class="sub-dot"></div><span>Cấu hình mục <b>Options</b> <strong>
+                  <(Nhớ chọn everyone)</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">4</div>
+        <div class="step-content">
+          <div class="step-text">Kiểm tra lại, nhấn <b>Save (Lưu)</b> — lời mời tự động gửi tới người tham gia.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">5</div>
+        <div class="step-content">
+          <div class="step-text">Trong cửa sổ cuộc họp, chọn <b>Join Teams meeting</b> hoặc <b>Copy join link</b> để
+            chia sẻ đường dẫn.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 10 -->
+  <div class="section" id="sec-s10">
+    <div class="section-header" onclick="toggle('s10')">
+      <div class="section-num">10</div>
+      <div class="section-title">Kiểm tra bộ gõ tiếng Việt (UniKey)</div>
+      <div class="section-tags"><span class="tag tag-pc">PC</span></div>
+      <span class="chevron" id="chev-s10">▶</span>
+    </div>
+    <div class="section-body" id="body-s10">
+      <div class="desc-box">Đảm bảo <strong>UniKey</strong> hoạt động đúng để gõ tiếng Việt có dấu trên máy tính.</div>
+
+      <div class="subsection">
+        <div class="subsection-title">Bước 1 — Kiểm tra UniKey</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Nhìn vào <b>khay hệ thống (System Tray)</b> góc phải thanh Taskbar.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Kiểm tra biểu tượng UniKey:</div>
+            <div class="step-sub">
+              <div class="sub-item">
+                <div class="sub-dot"></div><span><b>"V"</b> — đang ở chế độ gõ tiếng Việt ✓</span>
+              </div>
+              <div class="sub-item">
+                <div class="sub-dot"></div><span><b>"E"</b> — đang ở chế độ gõ tiếng Anh</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Bước 2 — Chuyển sang chế độ tiếng Việt</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text">Nếu đang hiển thị <b>"E"</b>, nhấp chuột vào biểu tượng để chuyển sang <b>"V"</b>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Bước 3 — Kiểm tra cấu hình nếu vẫn lỗi</div>
+        <div class="step">
+          <div class="step-circle">1</div>
+          <div class="step-content">
+            <div class="step-text"><b>Nhấp đúp</b> vào biểu tượng UniKey để mở bảng cấu hình.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">2</div>
+          <div class="step-content">
+            <div class="step-text">Kiểm tra và đặt đúng các thông số:</div>
+            <div class="step-sub">
+              <div class="sub-item">
+                <div class="sub-dot"></div><span><b>Bảng mã:</b> Unicode</span>
+              </div>
+              <div class="sub-item">
+                <div class="sub-dot"></div><span><b>Kiểu gõ:</b> Telex hoặc VNI</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-circle">3</div>
+          <div class="step-content">
+            <div class="step-text">Nhấn <b>Đóng (Close)</b> và thử gõ lại.</div>
+          </div>
+        </div>
+      </div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Section 11 -->
+  <div class="section" id="sec-s11">
+    <div class="section-header" onclick="toggle('s11')">
+      <div class="section-num">11</div>
+      <div class="section-title">Kết nối họp UCKC tại TTĐĐK</div>
+      <div class="section-tags"><span class="tag tag-pc">Phòng họp</span></div>
+      <span class="chevron" id="chev-s11">▶</span>
+    </div>
+    <div class="section-body" id="body-s11">
+      <div class="desc-box">Hướng dẫn thực hiện kết nối với Room UCKC của <strong>PVN</strong> từ phòng họp tại TTĐĐK.
+      </div>
+      <div class="steps-label">Các bước thực hiện</div>
+      <div class="step">
+        <div class="step-circle">1</div>
+        <div class="step-content">
+          <div class="step-text">Dùng <b>remote</b> để điều hướng menu trên màn hình thiết bị họp (xem sơ đồ nút điều
+            khiển đính kèm tại phòng họp).</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">2</div>
+        <div class="step-content">
+          <div class="step-text">Thực hiện quá trình kết nối vào <b>room MCU UCKC</b> theo hướng dẫn trên màn hình.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-content">
+          <div class="step-text">Khi màn hình hiển thị giao diện phòng họp PVN — <b>kết nối thành công</b>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="guide-footer">
+    <div class="footer-text"><b>Ban Kỹ Thuật Công Nghệ — Tổng Công ty Khí Việt Nam CTCP - PetroVietnam Gas Joint Stock
+        Corporation</b><br>Phiên bản 2026 · Dành cho nhân viên nội bộ<br>SĐT Hỗ Trợ:<br>Phạm Nguyên An
+      0379759697<br>Nguyễn Đức Đạt 0903736095<br>Lê Ngô Đình Quang 0785619931</div>
+    <button class="ask-btn" onclick="openZaloModal()">Nhắn Zalo ↗</button>
+  </div>
+</div>
+
+<!-- KHỐI MODAL (BẢNG CHỌN NGƯỒI CHAT ZALO) - Mặc định ẩn (hidden) -->
+<div id="zaloModal"
+  class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center transition-opacity">
+  <div class="bg-white rounded-xl shadow-2xl p-6 w-[90%] max-w-md transform transition-all glass-modal">
+
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-lg font-bold text-[#1e3a8a] dark:text-blue-300">Chọn IT để hỗ trợ qua Zalo</h3>
+      <button onclick="closeZaloModal()" class="text-gray-400 hover:text-gray-700 dark:hover:text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Danh sách các nút chat Zalo -->
+    <!-- Cú pháp link Zalo: https://zalo.me/số_điện_thoại -->
+    <div class="flex flex-col gap-3">
+      <a href="https://zalo.me/0379759697" target="_blank"
+        class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-blue-200 dark:hover:bg-slate-600">
+        <span>Phạm Nguyên An</span>
+        <span class="text-sm font-normal">0379 759 697</span>
+      </a>
+
+      <a href="https://zalo.me/0903736095" target="_blank"
+        class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-blue-200 dark:hover:bg-slate-600">
+        <span>Nguyễn Đức Đạt</span>
+        <span class="text-sm font-normal">0903 736 095</span>
+      </a>
+
+      <a href="https://zalo.me/0785619931" target="_blank"
+        class="flex items-center justify-between bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 py-3 px-4 rounded-lg font-medium transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-blue-200 dark:hover:bg-slate-600">
+        <span>Lê Ngô Đình Quang</span>
+        <span class="text-sm font-normal">0785 619 931</span>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox"
+  class="fixed inset-0 bg-black/90 z-[100] hidden flex-col items-center justify-center backdrop-blur-md transition-all duration-300 opacity-0 cursor-zoom-out"
+  onclick="closeLightbox()">
+  <button class="absolute top-6 right-6 text-white text-4xl hover:text-gray-300">&times;</button>
+  <img id="lightboxImg" src=""
+    class="max-w-[95%] max-h-[90vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300">
+  <p class="text-white/60 text-sm mt-4 tracking-widest uppercase">Click anywhere to close</p>
+</div>
+
+<!-- Back to Top Button -->
+<button id="backToTop"
+  class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-xl flex items-center justify-center text-xl transition-all duration-300 translate-y-20 opacity-0 z-40 focus:outline-none"
+  onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+  ↑
+</button>
+
+<script src="script.js"></script>
