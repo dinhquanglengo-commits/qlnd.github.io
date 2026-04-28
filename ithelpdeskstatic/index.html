@@ -1,4 +1,4 @@
-﻿<h2 class="sr-only">Hướng dẫn sử dụng hệ thống CNTT PV GAS - tài liệu tương tác đầy đủ 11 mục</h2>
+<h2 class="sr-only">Hướng dẫn sử dụng hệ thống CNTT PV GAS - tài liệu tương tác đầy đủ 11 mục</h2>
 
 <!-- Mình dùng Tailwind CSS để style cho giống ảnh của bạn nhanh nhất -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -83,53 +83,12 @@
         <span class="absolute right-3 top-1.5 text-gray-400 text-xs">🔍</span>
       </div>
     </div>
-    <div class="toc-grid">
-      <div class="toc-item" onclick="toggle('s1')">
-        <div class="toc-num">1</div>
-        <div class="toc-text">Kết nối WiFi (iOS &amp; Android)</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s2')">
-        <div class="toc-num">2</div>
-        <div class="toc-text">Kết nối VPN Global</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s3')">
-        <div class="toc-num">3</div>
-        <div class="toc-text">Cài đặt lại MFA (QR Code)</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s4')">
-        <div class="toc-num">4</div>
-        <div class="toc-text">Cài đặt ứng dụng PVGAS</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s5')">
-        <div class="toc-num">5</div>
-        <div class="toc-text">Cài đặt Microsoft Teams</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s6')">
-        <div class="toc-num">6</div>
-        <div class="toc-text">Đăng nhập ngoài công ty</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s7')">
-        <div class="toc-num">7</div>
-        <div class="toc-text">Archive email &amp; kiểm tra mail</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s8')">
-        <div class="toc-num">8</div>
-        <div class="toc-text">Thiết bị phòng họp (Polycom)</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s9')">
-        <div class="toc-num">9</div>
-        <div class="toc-text">Tạo lịch họp Teams</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s10')">
-        <div class="toc-num">10</div>
-        <div class="toc-text">Kiểm tra bộ gõ tiếng Việt</div>
-      </div>
-      <div class="toc-item" onclick="toggle('s11')">
-        <div class="toc-num">11</div>
-        <div class="toc-text">Kết nối họp UCKC tại TTĐĐK</div>
-      </div>
-      <div class="toc-item" style="background:transparent;cursor:default;"></div>
+    <div id="tocPagination" class="toc-pagination" style="display:none;">
+      <button class="toc-page-btn" id="tocPrevBtn" onclick="changeTocPage(-1)">&#8592;</button>
+      <span id="tocPageInfo">Trang 1 / 1</span>
+      <button class="toc-page-btn" id="tocNextBtn" onclick="changeTocPage(1)">&#8594;</button>
     </div>
+    <div class="toc-grid" id="tocGrid"></div>
   </div>
 
   <!-- Section 1 -->
@@ -499,7 +458,7 @@
             <div class="step-text">Tại màn hình xác nhận cuối, nhấn <b>"Yes"</b> để duy trì đăng nhập.</div>
           </div>
         </div>
-        <img style="width: 80%; height: auto;" src="">
+        <img style="width: 80%; height: auto;" src="images/sec57.jpg">
       </div>
       <div style="height:10px;"></div>
     </div>
@@ -544,6 +503,7 @@
             hoặc xác nhận mã.</div>
         </div>
       </div>
+      <img style="width: 50%; height: auto;" src="">
       <div class="step">
         <div class="step-circle">4</div>
         <div class="step-content">
@@ -551,6 +511,7 @@
             lần sau.</div>
         </div>
       </div>
+      <img style="width: 50%; height: auto;" src="">
       <div class="note">✅ Hoàn tất — có thể dùng MAIL, QLCV và CKS bình thường từ bên ngoài công ty.</div>
       <div style="height:10px;"></div>
     </div>
