@@ -301,15 +301,15 @@ window.addEventListener('load', () => {
     renderTocPage(); // Khởi tạo mục lục có pagination
 
     // Khôi phục dữ liệu ảnh đã lưu
-    loadSavedImages();
+    loadSavedImages().then(() => {
+        // Chỉ kích hoạt tính năng thêm/đổi ảnh nếu đang ở trang admin.html
+        if (window.location.pathname.includes('admin.html')) {
+            initImageUploads();
+            createAdminPanel();
+        }
 
-    // Chỉ kích hoạt tính năng thêm/đổi ảnh nếu đang ở trang admin.html
-    if (window.location.pathname.includes('admin.html')) {
-        initImageUploads();
-        createAdminPanel();
-    }
-
-    initLightbox();
+        initLightbox();
+    });
 });
 
 // ==========================================
@@ -456,7 +456,7 @@ function loadSavedImages() {
     const images = document.querySelectorAll('.section-body img:not(#lightboxImg)');
 
     // 1. Tải data.json từ server trước
-    fetch('data.json')
+    return fetch('data.json')
         .then(res => {
             if (res.ok) return res.json();
             return {};
