@@ -291,7 +291,8 @@ const updateLoading = () => {
 };
 
 // images
-let imageStates = {}; // Lưu trữ base64 của các ảnh
+let imageStates = {}; // Lưu trữ base64 của các ảnh hiện tại
+let baseData = {}; // Lưu trữ dữ liệu gốc từ data.json
 
 // Bắt đầu chạy sau khi trang load
 window.addEventListener('load', () => {
@@ -428,7 +429,8 @@ function initImageUploads() {
 
             // Xóa khỏi state và localStorage
             const index = Array.from(images).indexOf(img);
-            delete imageStates[index];
+            // Thay vì xóa hẳn, ta gán thành chuỗi rỗng để ghi đè baseData
+            imageStates[index] = '';
             saveToLocalStorage();
         });
     });
@@ -436,7 +438,14 @@ function initImageUploads() {
 
 function saveToLocalStorage() {
     try {
-        localStorage.setItem('helpdesk_images', JSON.stringify(imageStates));
+        // Chỉ lưu những ảnh có sự thay đổi so với data.json (ảnh mới thêm hoặc bị xóa)
+        const changesToSave = {};
+        for (const key in imageStates) {
+            if (imageStates[key] !== baseData[key]) {
+                changesToSave[key] = imageStates[key];
+            }
+        }
+        localStorage.setItem('helpdesk_images', JSON.stringify(changesToSave));
     } catch (e) {
         console.warn("Local storage quota exceeded");
         alert("Dung lượng bộ nhớ đã đầy do ảnh quá lớn! Hãy dùng tính năng Xuất file JSON để lưu trữ.");
@@ -446,30 +455,39 @@ function saveToLocalStorage() {
 function loadSavedImages() {
     const images = document.querySelectorAll('.section-body img:not(#lightboxImg)');
 
-    // Ưu tiên load từ localStorage
-    const localData = localStorage.getItem('helpdesk_images');
-    if (localData) {
-        try {
-            const parsed = JSON.parse(localData);
-            Object.assign(imageStates, parsed);
-            applyImageData(images);
-            return; // Đã load từ local thì không cần fetch JSON nữa
-        } catch (e) { }
-    }
-
-    // Nếu không có trong localStorage, thử tìm file data.json (nếu đã được upload lên host)
+    // 1. Tải data.json từ server trước
     fetch('data.json')
         .then(res => {
             if (res.ok) return res.json();
+            return {};
         })
         .then(data => {
-            if (data) {
+            if (data && Object.keys(data).length > 0) {
+                baseData = data;
                 Object.assign(imageStates, data);
-                applyImageData(images);
             }
+            
+            // 2. Sau đó tải localStorage đè lên (nếu có ảnh nào mới thêm chưa export)
+            const localData = localStorage.getItem('helpdesk_images');
+            if (localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    Object.assign(imageStates, parsed);
+                } catch (e) { }
+            }
+            
+            applyImageData(images);
         })
         .catch(err => {
-            // File data.json có thể không tồn tại, bỏ qua
+            // Nếu không có data.json, chỉ dùng localStorage
+            const localData = localStorage.getItem('helpdesk_images');
+            if (localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    Object.assign(imageStates, parsed);
+                    applyImageData(images);
+                } catch (e) { }
+            }
         });
 }
 
