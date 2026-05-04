@@ -446,6 +446,7 @@ function saveToLocalStorage() {
             }
         }
         localStorage.setItem('helpdesk_images', JSON.stringify(changesToSave));
+        if (typeof updateStorageInfo === 'function') updateStorageInfo();
     } catch (e) {
         console.warn("Local storage quota exceeded");
         alert("Dung lượng bộ nhớ đã đầy do ảnh quá lớn! Hãy dùng tính năng Xuất file JSON để lưu trữ.");
@@ -455,40 +456,23 @@ function saveToLocalStorage() {
 function loadSavedImages() {
     const images = document.querySelectorAll('.section-body img:not(#lightboxImg)');
 
-    // 1. Tải data.json từ server trước
-    return fetch('data.json')
-        .then(res => {
-            if (res.ok) return res.json();
-            return {};
-        })
-        .then(data => {
-            if (data && Object.keys(data).length > 0) {
-                baseData = data;
-                Object.assign(imageStates, data);
-            }
-            
-            // 2. Sau đó tải localStorage đè lên (nếu có ảnh nào mới thêm chưa export)
-            const localData = localStorage.getItem('helpdesk_images');
-            if (localData) {
-                try {
-                    const parsed = JSON.parse(localData);
-                    Object.assign(imageStates, parsed);
-                } catch (e) { }
-            }
-            
-            applyImageData(images);
-        })
-        .catch(err => {
-            // Nếu không có data.json, chỉ dùng localStorage
-            const localData = localStorage.getItem('helpdesk_images');
-            if (localData) {
-                try {
-                    const parsed = JSON.parse(localData);
-                    Object.assign(imageStates, parsed);
-                    applyImageData(images);
-                } catch (e) { }
-            }
-        });
+    // 1. Lấy dữ liệu từ file data.js đã được nhúng sẵn qua thẻ <script>
+    if (typeof window.IT_HELPDESK_DATA !== 'undefined' && window.IT_HELPDESK_DATA) {
+        baseData = window.IT_HELPDESK_DATA;
+        Object.assign(imageStates, window.IT_HELPDESK_DATA);
+    }
+
+    // 2. Sau đó tải localStorage đè lên (nếu có ảnh nào mới thêm chưa export)
+    const localData = localStorage.getItem('helpdesk_images');
+    if (localData) {
+        try {
+            const parsed = JSON.parse(localData);
+            Object.assign(imageStates, parsed);
+        } catch (e) { }
+    }
+
+    applyImageData(images);
+    return Promise.resolve();
 }
 
 function applyImageData(images) {
@@ -504,10 +488,10 @@ function applyImageData(images) {
 // Bảng điều khiển Admin để Xuất/Nhập JSON
 function createAdminPanel() {
     const panel = document.createElement('div');
-    panel.className = 'fixed bottom-6 left-6 bg-white p-4 rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col gap-2 transition-all';
+    panel.className = 'fixed bottom-6 left-6 bg-white p-4 rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col gap-2 transition-all dark:bg-slate-800 dark:border-slate-700';
     panel.innerHTML = `
-        <div class="flex justify-between items-center mb-1 border-b pb-1">
-            <h3 class="text-sm font-bold text-gray-700">🛠️ Công cụ Admin</h3>
+        <div class="flex justify-between items-center mb-1 border-b pb-1 dark:border-slate-700">
+            <h3 class="text-sm font-bold text-gray-700 dark:text-gray-200">🛠️ Công cụ Admin</h3>
         </div>
         <button id="btnExportJson" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition font-medium text-left flex items-center gap-2">
             <span>💾</span> Tải xuống JSON
@@ -515,20 +499,33 @@ function createAdminPanel() {
         <button id="btnImportJson" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition font-medium text-left flex items-center gap-2" onclick="document.getElementById('importJsonInput').click()">
             <span>📂</span> Tải lên JSON
         </button>
-        <button id="btnClearData" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2 rounded text-sm transition font-medium text-left flex items-center gap-2 mt-2">
+        <button id="btnClearData" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2 rounded text-sm transition font-medium text-left flex items-center gap-2 mt-2 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/50">
             <span>🗑️</span> Xóa dữ liệu tạm
         </button>
         <input type="file" id="importJsonInput" accept=".json" class="hidden">
-        <p class="text-[10px] text-gray-400 mt-1 max-w-[150px] leading-tight">Dữ liệu được tự động lưu tạm trên trình duyệt.</p>
+        
+        <div class="mt-3 pt-2 border-t border-gray-100 dark:border-slate-700">
+            <div class="flex justify-between text-[10px] font-medium text-gray-500 mb-1 dark:text-gray-400">
+                <span>Dung lượng Local Storage:</span>
+                <span id="storageText">0.00MB / 5MB</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 dark:bg-slate-700">
+                <div id="storageBar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
     `;
     document.body.appendChild(panel);
 
+    // Cập nhật thông số bộ nhớ ngay khi tạo
+    if (typeof updateStorageInfo === 'function') updateStorageInfo();
+
     // Xử lý Xuất JSON
     document.getElementById('btnExportJson').addEventListener('click', () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(imageStates));
+        const jsContent = "window.IT_HELPDESK_DATA = " + JSON.stringify(imageStates) + ";";
+        const dataStr = "data:text/javascript;charset=utf-8," + encodeURIComponent(jsContent);
         const dlAnchorElem = document.createElement('a');
         dlAnchorElem.setAttribute("href", dataStr);
-        dlAnchorElem.setAttribute("download", "data.json");
+        dlAnchorElem.setAttribute("download", "data.js");
         dlAnchorElem.click();
         dlAnchorElem.remove();
     });
@@ -545,7 +542,12 @@ function createAdminPanel() {
                 alert("Đã tải dữ liệu thành công! Trang sẽ tự tải lại.");
                 location.reload();
             } catch (err) {
-                alert("File JSON không hợp lệ!");
+                if (err.name === 'QuotaExceededError') {
+                    alert("Lỗi: Dữ liệu quá lớn, vượt quá giới hạn bộ nhớ của trình duyệt (thường là 5MB)!");
+                } else {
+                    alert("File JSON không hợp lệ hoặc bị lỗi cú pháp!\nChi tiết: " + err.message);
+                }
+                console.error("Lỗi khi import JSON:", err);
             }
         };
         reader.readAsText(file);
@@ -558,6 +560,38 @@ function createAdminPanel() {
             location.reload();
         }
     });
+}
+
+function updateStorageInfo() {
+    let totalBytes = 0;
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            totalBytes += (localStorage[key].length + key.length) * 2;
+        }
+    }
+
+    const usedMB = (totalBytes / (1024 * 1024)).toFixed(2);
+    const maxMB = 5.0; // Khoảng 5MB giới hạn trình duyệt
+    let percent = (usedMB / maxMB) * 100;
+    if (percent > 100) percent = 100;
+
+    const storageText = document.getElementById('storageText');
+    const storageBar = document.getElementById('storageBar');
+
+    if (storageText && storageBar) {
+        storageText.innerText = `${usedMB}MB / ${maxMB}MB`;
+        storageBar.style.width = `${percent}%`;
+        
+        if (percent > 80) {
+            storageBar.classList.remove('bg-blue-500');
+            storageBar.classList.add('bg-red-500');
+            storageText.classList.add('text-red-500');
+        } else {
+            storageBar.classList.add('bg-blue-500');
+            storageBar.classList.remove('bg-red-500');
+            storageText.classList.remove('text-red-500');
+        }
+    }
 }
 
 // ==========================================
@@ -669,3 +703,4 @@ function closeLightbox() {
         lightboxImg.src = '';
     }, 300); // Bằng thời gian transition CSS
 }
+
