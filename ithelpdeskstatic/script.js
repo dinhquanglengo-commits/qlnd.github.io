@@ -1,3 +1,77 @@
+// ==========================================
+// TOC PAGINATION — Mục lục có nút ← →
+// ==========================================
+// Để thêm mục mới, chỉ cần thêm 1 dòng vào mảng này:
+const TOC_ITEMS = [
+    { num: 1, id: 's1', text: 'Kết nối WiFi (iOS & Android)' },
+    { num: 2, id: 's2', text: 'Kết nối VPN Global' },
+    { num: 3, id: 's3', text: 'Cài đặt lại MFA (QR Code)' },
+    { num: 4, id: 's4', text: 'Cài đặt ứng dụng PVGAS' },
+    { num: 5, id: 's5', text: 'Cài đặt Microsoft Teams' },
+    { num: 6, id: 's6', text: 'Đăng nhập ngoài công ty' },
+    { num: 7, id: 's7', text: 'Archive email & kiểm tra mail' },
+    { num: 8, id: 's8', text: 'Thiết bị phòng họp (Polycom)' },
+    { num: 9, id: 's9', text: 'Tạo lịch họp Teams' },
+    { num: 10, id: 's10', text: 'Kiểm tra bộ gõ tiếng Việt' },
+    { num: 11, id: 's11', text: 'Kết nối họp UCKC tại TTĐĐK' },
+    // { num: 12, id: 's12', text: 'Tên mục 12 của bạn' },
+];
+const TOC_PER_PAGE = 12; // Mỗi trang hiển thị tối đa 10 mục (5 hàng × 2 cột)
+let tocCurrentPage = 0;
+
+function renderTocPage() {
+    const grid = document.getElementById('tocGrid');
+    if (!grid) return;
+
+    const searchVal = document.getElementById('searchInput') ? document.getElementById('searchInput').value.trim() : '';
+
+    let itemsToShow;
+    if (searchVal) {
+        // Khi đang tìm kiếm: hiển thị tất cả mục khớp từ khóa (bỏ qua pagination)
+        const filter = searchVal.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        itemsToShow = TOC_ITEMS.filter(item =>
+            item.text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(filter)
+        );
+        // Ẩn thanh pagination khi đang search
+        const pagination = document.getElementById('tocPagination');
+        if (pagination) pagination.style.display = 'none';
+    } else {
+        // Chế độ bình thường: phân trang
+        const start = tocCurrentPage * TOC_PER_PAGE;
+        itemsToShow = TOC_ITEMS.slice(start, start + TOC_PER_PAGE);
+        const totalPages = Math.ceil(TOC_ITEMS.length / TOC_PER_PAGE);
+        const pagination = document.getElementById('tocPagination');
+        const pageInfo = document.getElementById('tocPageInfo');
+        const prevBtn = document.getElementById('tocPrevBtn');
+        const nextBtn = document.getElementById('tocNextBtn');
+        if (pagination) pagination.style.display = totalPages > 1 ? 'flex' : 'none';
+        if (pageInfo) pageInfo.textContent = 'Trang ' + (tocCurrentPage + 1) + ' / ' + totalPages;
+        if (prevBtn) prevBtn.disabled = tocCurrentPage === 0;
+        if (nextBtn) nextBtn.disabled = tocCurrentPage >= totalPages - 1;
+    }
+
+    // Render HTML các ô mục lục
+    let html = itemsToShow.map(function (item) {
+        return '<div class="toc-item" onclick="toggle(\'' + item.id + '\')">' +
+            '<div class="toc-num">' + item.num + '</div>' +
+            '<div class="toc-text">' + item.text + '</div>' +
+            '</div>';
+    }).join('');
+
+    // Nếu số ô lẻ, thêm ô trống giữ layout 2 cột
+    if (itemsToShow.length % 2 !== 0) {
+        html += '<div class="toc-item" style="background:transparent;cursor:default;"></div>';
+    }
+
+    grid.innerHTML = html;
+}
+
+function changeTocPage(direction) {
+    const totalPages = Math.ceil(TOC_ITEMS.length / TOC_PER_PAGE);
+    tocCurrentPage = Math.max(0, Math.min(tocCurrentPage + direction, totalPages - 1));
+    renderTocPage();
+}
+
 function toggleAccordion() {
     const content = document.getElementById('accordionContent');
     const arrow = document.getElementById('arrowIcon');
@@ -217,23 +291,25 @@ const updateLoading = () => {
 };
 
 // images
-let imageStates = {}; // Lưu trữ base64 của các ảnh
+let imageStates = {}; // Lưu trữ base64 của các ảnh hiện tại
+let baseData = {}; // Lưu trữ dữ liệu gốc từ data.json
 
 // Bắt đầu chạy sau khi trang load
 window.addEventListener('load', () => {
     updateLoading();
     initDarkMode();
+    renderTocPage(); // Khởi tạo mục lục có pagination
 
     // Khôi phục dữ liệu ảnh đã lưu
-    loadSavedImages();
+    loadSavedImages().then(() => {
+        // Chỉ kích hoạt tính năng thêm/đổi ảnh nếu đang ở trang admin.html
+        if (window.location.pathname.includes('admin.html')) {
+            initImageUploads();
+            createAdminPanel();
+        }
 
-    // Chỉ kích hoạt tính năng thêm/đổi ảnh nếu đang ở trang admin.html
-    if (window.location.pathname.includes('admin.html')) {
-        initImageUploads();
-        createAdminPanel();
-    }
-
-    initLightbox();
+        initLightbox();
+    });
 });
 
 // ==========================================
@@ -353,7 +429,8 @@ function initImageUploads() {
 
             // Xóa khỏi state và localStorage
             const index = Array.from(images).indexOf(img);
-            delete imageStates[index];
+            // Thay vì xóa hẳn, ta gán thành chuỗi rỗng để ghi đè baseData
+            imageStates[index] = '';
             saveToLocalStorage();
         });
     });
@@ -361,7 +438,14 @@ function initImageUploads() {
 
 function saveToLocalStorage() {
     try {
-        localStorage.setItem('helpdesk_images', JSON.stringify(imageStates));
+        // Chỉ lưu những ảnh có sự thay đổi so với data.json (ảnh mới thêm hoặc bị xóa)
+        const changesToSave = {};
+        for (const key in imageStates) {
+            if (imageStates[key] !== baseData[key]) {
+                changesToSave[key] = imageStates[key];
+            }
+        }
+        localStorage.setItem('helpdesk_images', JSON.stringify(changesToSave));
     } catch (e) {
         console.warn("Local storage quota exceeded");
         alert("Dung lượng bộ nhớ đã đầy do ảnh quá lớn! Hãy dùng tính năng Xuất file JSON để lưu trữ.");
@@ -371,30 +455,39 @@ function saveToLocalStorage() {
 function loadSavedImages() {
     const images = document.querySelectorAll('.section-body img:not(#lightboxImg)');
 
-    // Ưu tiên load từ localStorage
-    const localData = localStorage.getItem('helpdesk_images');
-    if (localData) {
-        try {
-            const parsed = JSON.parse(localData);
-            Object.assign(imageStates, parsed);
-            applyImageData(images);
-            return; // Đã load từ local thì không cần fetch JSON nữa
-        } catch (e) { }
-    }
-
-    // Nếu không có trong localStorage, thử tìm file data.json (nếu đã được upload lên host)
-    fetch('data.json')
+    // 1. Tải data.json từ server trước
+    return fetch('data.json')
         .then(res => {
             if (res.ok) return res.json();
+            return {};
         })
         .then(data => {
-            if (data) {
+            if (data && Object.keys(data).length > 0) {
+                baseData = data;
                 Object.assign(imageStates, data);
-                applyImageData(images);
             }
+            
+            // 2. Sau đó tải localStorage đè lên (nếu có ảnh nào mới thêm chưa export)
+            const localData = localStorage.getItem('helpdesk_images');
+            if (localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    Object.assign(imageStates, parsed);
+                } catch (e) { }
+            }
+            
+            applyImageData(images);
         })
         .catch(err => {
-            // File data.json có thể không tồn tại, bỏ qua
+            // Nếu không có data.json, chỉ dùng localStorage
+            const localData = localStorage.getItem('helpdesk_images');
+            if (localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    Object.assign(imageStates, parsed);
+                    applyImageData(images);
+                } catch (e) { }
+            }
         });
 }
 
@@ -504,7 +597,10 @@ if (searchInput) {
     searchInput.addEventListener('input', function () {
         const filter = this.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-        // Lọc trong TOC
+        // Re-render mục lục theo từ khóa tìm kiếm (tích hợp pagination)
+        renderTocPage();
+
+        // Lọc trong TOC (áp dụng sau khi renderTocPage đã vẽ lại)
         const tocItems = document.querySelectorAll('.toc-item');
         tocItems.forEach(item => {
             const text = item.innerText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
