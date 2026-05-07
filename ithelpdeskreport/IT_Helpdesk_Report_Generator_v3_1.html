@@ -528,6 +528,87 @@
       display: none
     }
 
+    /* ── review card (AI + user) ── */
+    .revbox {
+      border: 1.5px solid var(--bdr);
+      background: #fff;
+      border-radius: var(--r);
+      padding: 12px;
+    }
+
+    .revhint {
+      font-size: 12px;
+      color: var(--tx3);
+      margin-top: 6px;
+      line-height: 1.4
+    }
+
+    .revta {
+      width: 100%;
+      min-height: 170px;
+      resize: vertical;
+      border: 1.5px solid var(--bdr);
+      border-radius: var(--rs);
+      padding: 10px 11px;
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.5;
+      outline: none;
+      background: #fbfdff
+    }
+
+    .revta:focus {
+      border-color: var(--p);
+      box-shadow: 0 0 0 3px rgba(26, 86, 219, .10)
+    }
+
+    .revrow {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 10px
+    }
+
+    .revkey {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 10px
+    }
+
+    .revkey input {
+      flex: 1;
+      min-width: 220px;
+      border: 1.5px solid var(--bdr);
+      border-radius: var(--rs);
+      padding: 10px 11px;
+      font-family: var(--font);
+      font-size: 13px;
+      outline: none;
+      background: #fff
+    }
+
+    .revkey input:focus {
+      border-color: var(--p);
+      box-shadow: 0 0 0 3px rgba(26, 86, 219, .10)
+    }
+
+    .chk {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--tx2);
+      user-select: none
+    }
+
+    .chk input {
+      width: 16px;
+      height: 16px
+    }
+
     /* ── export banner ── */
     .exp-banner {
       background: linear-gradient(135deg, #1a56db 0%, #1341a8 100%);
@@ -910,6 +991,37 @@
         </div>
       </div>
 
+      <!-- Review (AI + user) -->
+      <div class="card" id="reviewCard">
+        <div class="ctitle">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M9 12h6M9 16h6M13 8h2M7 20h10a2 2 0 002-2V8l-4-4H7a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Nhận xét trước khi xuất (AI + người dùng)
+        </div>
+        <div class="revbox">
+          <textarea class="revta" id="reviewText" placeholder="Nhấn “Tạo nhận xét bằng AI” để sinh nội dung ATTT + Đánh giá/kiến nghị, sau đó bạn có thể chỉnh sửa trước khi xuất.&#10;&#10;Gợi ý format:&#10;- Tình hình ATTT&#10;  - Sự cố ATTT:&#10;    + ...&#10;  - Hoạt động threats:&#10;    + ...&#10;  - Đánh giá chung:&#10;    + ...&#10;- Đánh giá và kiến nghị và đề xuất:&#10;  - Đánh giá sự hiệu quả:&#10;    + ...&#10;  - Điểm nổi bật:&#10;    + ...&#10;  - Kiến nghị:&#10;    + ..."></textarea>
+          <div class="revrow">
+            <button class="btn btn-o" id="btnAiReview" onclick="genAiReview()">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 3v3m0 12v3M4.22 4.22l2.12 2.12m11.32 11.32l2.12 2.12M3 12h3m12 0h3M4.22 19.78l2.12-2.12m11.32-11.32l2.12-2.12"/>
+              </svg>
+              Tạo nhận xét bằng AI
+            </button>
+            <label class="chk" title="Nếu bật, Word/PDF sẽ dùng đúng nội dung bạn đang thấy ở đây (không gọi AI lại).">
+              <input type="checkbox" id="useReviewForExport" checked>
+              Dùng nội dung này khi xuất (không gọi AI lại)
+            </label>
+          </div>
+          <div class="revkey">
+            <input id="geminiKey" type="password" placeholder="Nhập Gemini API key (Google AI Studio) — lưu trên máy bạn" autocomplete="off">
+            <button class="btn btn-o" id="btnSaveKey" onclick="saveGeminiKey()">Lưu key</button>
+          </div>
+          <div class="revhint">Nội dung này sẽ được đưa vào đúng 2 mục <strong>- Tình hình ATTT</strong> và <strong>- Đánh giá và kiến nghị và đề xuất</strong> trong file Word/PDF.</div>
+          <div class="stmsg" id="revst"></div>
+        </div>
+      </div>
+
       <!-- Step 3 -->
       <div class="card">
         <div class="ctitle">
@@ -966,6 +1078,247 @@
     let allData = [], monthData = [], selYear = null, selMonth = null, curView = 'bar';
     const CI = {};
     const MN = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+    let reviewText = '';
+    let lastReviewKey = ''; // `${year}-${month}`
+
+    // ── review helpers (AI + user) ───────────────────────────────────────────────
+    const escHtml = (s) => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+    function getReviewUi() {
+      return {
+        ta: document.getElementById('reviewText'),
+        chk: document.getElementById('useReviewForExport'),
+        st: document.getElementById('revst'),
+        btn: document.getElementById('btnAiReview'),
+        key: document.getElementById('geminiKey'),
+        btnKey: document.getElementById('btnSaveKey'),
+      };
+    }
+
+    const GEMINI_KEY_LS = 'GEMINI_API_KEY';
+    // Fallback list: API availability varies by account/region/time
+    const GEMINI_MODELS = [
+      'gemini-2.5-flash-lite'
+    ];
+    const GEMINI_API_VERSIONS = ['v1', 'v1beta'];
+
+    function loadGeminiKeyToUi() {
+      const ui = getReviewUi();
+      if (!ui?.key) return;
+      const k = (localStorage.getItem(GEMINI_KEY_LS) || '').trim();
+      ui.key.value = k;
+    }
+
+    function saveGeminiKey() {
+      const ui = getReviewUi();
+      if (!ui?.key || !ui?.st) return;
+      const k = (ui.key.value || '').trim();
+      if (!k) { showSt(ui.st, 'err', 'Vui lòng nhập API key.'); return; }
+      localStorage.setItem(GEMINI_KEY_LS, k);
+      showSt(ui.st, 'ok', '✓ Đã lưu API key trên máy (localStorage).');
+    }
+
+    function getGeminiKey() {
+      const ui = getReviewUi();
+      const k = ((ui?.key?.value) || localStorage.getItem(GEMINI_KEY_LS) || '').trim();
+      return k;
+    }
+
+    function extractJsonObject(text) {
+      const s = String(text || '').trim();
+      const i = s.indexOf('{');
+      const j = s.lastIndexOf('}');
+      if (i >= 0 && j > i) return s.slice(i, j + 1);
+      return s;
+    }
+
+    async function geminiGenerateJson({ system, user }) {
+      const key = getGeminiKey();
+      if (!key) throw new Error('Chưa có Gemini API key (nhập ở phần Nhận xét và bấm “Lưu key”).');
+
+      const body = {
+        contents: [{ role: 'user', parts: [{ text: `${system}\n\n${user}` }] }],
+        generationConfig: { temperature: 0.6, topP: 0.9, maxOutputTokens: 1800 },
+      };
+
+      let lastErr = null;
+      for (const v of GEMINI_API_VERSIONS) {
+        for (const model of GEMINI_MODELS) {
+          const url = `https://generativelanguage.googleapis.com/${v}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+          try {
+            const resp = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body)
+            });
+            if (!resp.ok) {
+              // Try to extract useful error message
+              let detail = '';
+              try {
+                const ej = await resp.json();
+                detail = ej?.error?.message ? ` — ${ej.error.message}` : '';
+              } catch (_) {}
+              const err = new Error(`API error ${resp.status}${detail} (model=${model}, api=${v})`);
+              err.status = resp.status;
+              throw err;
+            }
+            const data = await resp.json();
+            const txt = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+            const raw = extractJsonObject(txt);
+            return JSON.parse(raw);
+          } catch (e) {
+            lastErr = e;
+            // If it's not "not found" or "not permitted", don't burn through many retries
+            if (String(e?.message || '').includes('API error 401') ||
+                String(e?.message || '').includes('API error 403') ||
+                String(e?.message || '').includes('API error 429')) {
+              throw e;
+            }
+            // Otherwise keep trying next model/version (404 etc.)
+          }
+        }
+      }
+      throw lastErr || new Error('Không gọi được Gemini API.');
+    }
+
+    function syncReviewFromUi() {
+      const { ta } = getReviewUi();
+      if (ta) reviewText = ta.value || '';
+    }
+
+    function setReviewToUi(text) {
+      const { ta } = getReviewUi();
+      reviewText = text || '';
+      if (ta) ta.value = reviewText;
+    }
+
+    function splitReviewText(txt) {
+      const lines = String(txt || '').replace(/\r\n/g, '\n').split('\n');
+      const idx = lines.findIndex(l => /^\s*-\s*/.test(l) && /đánh\s*giá/i.test(l) && /kiến\s*nghị/i.test(l));
+      if (idx >= 0) return { atttLines: lines.slice(0, idx), danhGiaLines: lines.slice(idx) };
+      return { atttLines: lines, danhGiaLines: [] };
+    }
+
+    function linesToWordParas(lines, BULL, P, E) {
+      const out = [];
+      lines.forEach(raw => {
+        const line = String(raw ?? '').trim();
+        if (!line) return;
+        if (line.startsWith('- ')) out.push(BULL(line.slice(2).trim()));
+        else if (line.startsWith('+ ')) out.push(BULL(line.slice(2).trim(), 1));
+        else out.push(P(line));
+      });
+      if (out.length) out.push(E());
+      return out;
+    }
+
+    function linesToPdfHtml(lines) {
+      return lines.map(raw => {
+        const line = String(raw ?? '').trim();
+        if (!line) return '';
+        if (line.startsWith('- ')) return `<p class="b1">${escHtml(line.slice(2).trim())}</p>`;
+        if (line.startsWith('+ ')) return `<p class="b2">${escHtml(line.slice(2).trim())}</p>`;
+        return `<p class="b0">${escHtml(line)}</p>`;
+      }).join('');
+    }
+
+    function aiJsonToReviewText(parsed) {
+      const at = parsed?.attt || {};
+      const dg = parsed?.danhGia || {};
+      const nb = Array.isArray(dg.diemNoiBat) ? dg.diemNoiBat.filter(Boolean) : [];
+      const kn = Array.isArray(dg.kienNghi) ? dg.kienNghi.filter(Boolean) : [];
+      return [
+        '- Tình hình ATTT',
+        '- Sự cố ATTT:',
+        at.succo ? `+ ${at.succo}` : '+ ',
+        '- Hoạt động threats:',
+        at.threats ? `+ ${at.threats}` : '+ ',
+        '- Đánh giá chung:',
+        at.danhGiaChung ? `+ ${at.danhGiaChung}` : '+ ',
+        '',
+        '- Đánh giá và kiến nghị và đề xuất:',
+        '- Đánh giá sự hiệu quả:',
+        dg.hieuQua ? `+ ${dg.hieuQua}` : '+ ',
+        dg.vaiTro ? `+ ${dg.vaiTro}` : '+ ',
+        ...(nb.length ? ['- Điểm nổi bật:', ...nb.map(x => `+ ${x}`)] : []),
+        '- Kiến nghị:',
+        ...(kn.length ? kn.map(x => `+ ${x}`) : ['+ ']),
+      ].join('\n');
+    }
+
+    async function genAiReview() {
+      const ui = getReviewUi();
+      if (!ui.ta || !ui.btn || !ui.st) return;
+      if (!selYear || !selMonth || !monthData?.length) { showSt(ui.st, 'err', 'Vui lòng chọn tháng trước.'); return; }
+      syncReviewFromUi();
+
+      ui.btn.disabled = true;
+      showSt(ui.st, 'ok', '🤖 Đang tạo nhận xét bằng AI...');
+
+      try {
+        const mn = MN[selMonth - 1];
+        const total = monthData.length;
+        const done  = monthData.filter(r => r.tinhtrang.includes('Hoàn')).length;
+        const inprog= monthData.filter(r => r.tinhtrang.includes('Đang')).length;
+        const users = new Set(monthData.map(r => r.user).filter(v => v && v !== 'null' && v.trim()));
+        const loaiC = cnt(monthData, 'loai', 10);
+        const itC   = cnt(monthData, 'itid', 10);
+        const htC   = cnt(monthData, 'hethong', 10);
+        const dvC   = cnt(monthData, 'donvi', 10);
+        const prevM = selMonth === 1 ? 12 : selMonth - 1;
+        const prevY = selMonth === 1 ? selYear - 1 : selYear;
+        const prevData  = allData.filter(r => { const d = parseD(r.date); return d && d.getFullYear() === prevY && d.getMonth() + 1 === prevM; });
+        const prevTotal = prevData.length;
+        const diff = total - prevTotal;
+        const emailTickets = monthData.filter(r => r.hethong && (r.hethong.includes('EMAIL') || r.hethong.includes('MAIL') || r.hethong.includes('Exchange'))).length;
+        const vpnTickets   = monthData.filter(r => r.hethong && r.hethong.includes('VPN')).length;
+        const sapTickets   = monthData.filter(r => r.hethong && r.hethong.includes('SAP')).length;
+        const phucTapCount = monthData.filter(r => r.mucdo && (r.mucdo.includes('Phức') || r.mucdo.includes('Rất'))).length;
+        const pctHoanThanh = total > 0 ? Math.round(done / total * 100) : 0;
+        const avgTicketPerIT = itC.length > 0 ? Math.round(total / itC.length) : 0;
+
+        const THUE_NGOAI_SET = new Set(['DAT.ND2', 'QUANG.LND']);
+        const itInMonth = itC.map(([name]) => name);
+        const soChinhThuc = itInMonth.filter(n => !THUE_NGOAI_SET.has(n)).length;
+        const soThueNgoai = itInMonth.filter(n => THUE_NGOAI_SET.has(n)).length;
+
+        const summaryData = {
+          thang: mn, nam: selYear,
+          tongTicket: total, hoanthanh: done, dangXuLy: inprog,
+          pctHoanThanh,
+          nguoiDung: users.size,
+          soNhanSuIT: itC.length, chinhThuc: soChinhThuc, thueNgoai: soThueNgoai,
+          avgTicketPerIT,
+          thangTruoc: { ten: MN[prevM-1], total: prevTotal, chenh: diff },
+          topHethong: htC.slice(0,5).map(([h,v])=>({ten:h,soTicket:v})),
+          topIT: itC.slice(0,5).map(([n,v])=>({ten:n,soTicket:v})),
+          topDonVi: dvC.slice(0,4).map(([d,v])=>({ten:d,soTicket:v})),
+          loaiYC: loaiC.slice(0,6).map(([l,v])=>({loai:l,soTicket:v})),
+          nhayBaoMat: { email: emailTickets, vpn: vpnTickets, sap: sapTickets, phucTap: phucTapCount },
+        };
+
+        const parsed = await geminiGenerateJson({
+          system: `Bạn là chuyên gia IT và an ninh thông tin tại PV GAS. Nhiệm vụ: viết 2 phần cho báo cáo Helpdesk hàng tháng bằng tiếng Việt, văn phong hành chính chuyên nghiệp, phân tích sâu từ số liệu thực tế.
+
+Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo đúng schema:
+{
+  "attt": { "succo": "...", "threats": "...", "danhGiaChung": "..." },
+  "danhGia": { "hieuQua": "...", "vaiTro": "...", "diemNoiBat": ["..."], "kienNghi": ["..."] }
+}`,
+          user: `Số liệu Helpdesk ${mn} ${selYear}:\n${JSON.stringify(summaryData, null, 2)}`
+        });
+
+        const txt = aiJsonToReviewText(parsed);
+        setReviewToUi(txt);
+        lastReviewKey = `${selYear}-${selMonth}`;
+        showSt(ui.st, 'ok', '✓ Đã tạo nhận xét. Bạn có thể chỉnh sửa trước khi xuất.');
+      } catch (e) {
+        console.error(e);
+        showSt(ui.st, 'err', 'Không tạo được nhận xét AI: ' + (e.message || e));
+      } finally {
+        ui.btn.disabled = false;
+      }
+    }
 
     // ── upload ───────────────────────────────────────────────────────────────────
     const upzone = document.getElementById('upzone'), fi = document.getElementById('fileInput');
@@ -1027,6 +1380,17 @@
       renderKPI();
       renderCurrentView();
       renderTable();
+      loadGeminiKeyToUi();
+      // Reset review if switching month and user hasn't typed anything
+      const rk = `${selYear}-${selMonth}`;
+      const ui = getReviewUi();
+      if (ui?.ta) {
+        syncReviewFromUi();
+        if ((!reviewText || !reviewText.trim()) && lastReviewKey !== rk) {
+          ui.ta.value = '';
+          reviewText = '';
+        }
+      }
       document.getElementById('btnExp').disabled = false;
       // Update banner text
       const mn = MN[selMonth - 1];
@@ -1258,6 +1622,12 @@
         document.getElementById('btnExpBanner').disabled = loading;
         document.getElementById('floatBtn').disabled = loading;
         ['btnPdf','floatBtnPdf'].forEach(id => { const e=document.getElementById(id); if(e) e.disabled=loading; });
+        const rui = getReviewUi();
+        if (rui?.btn) rui.btn.disabled = loading;
+        if (rui?.ta) rui.ta.disabled = loading;
+        if (rui?.chk) rui.chk.disabled = loading;
+        if (rui?.btnKey) rui.btnKey.disabled = loading;
+        if (rui?.key) rui.key.disabled = loading;
         document.getElementById('btnExp').innerHTML = loading
           ? `${spinIcon} Đang tạo...`
           : `${dlIcon} Tải xuống file Word (.docx)`;
@@ -1663,44 +2033,49 @@
           E(),
         ];
 
-        // ── 5 & 6. Gọi Claude API để generate ATTT + Đánh giá ───────────────
-        showSt(st, 'ok', '🤖 Claude đang phân tích dữ liệu và viết báo cáo...');
-
-        // Chuẩn bị dữ liệu tóm tắt gửi lên API
-        const emailTickets = monthData.filter(r => r.hethong && (r.hethong.includes('EMAIL') || r.hethong.includes('MAIL') || r.hethong.includes('Exchange'))).length;
-        const vpnTickets   = monthData.filter(r => r.hethong && r.hethong.includes('VPN')).length;
-        const sapTickets   = monthData.filter(r => r.hethong && r.hethong.includes('SAP')).length;
-        const phucTapCount = monthData.filter(r => r.mucdo && (r.mucdo.includes('Phức') || r.mucdo.includes('Rất'))).length;
-        const pctHoanThanh = total > 0 ? Math.round(done / total * 100) : 0;
-        const topSystem    = htC.length ? htC[0][0] : '';
-        const topSystem2   = htC.length > 1 ? htC[1][0] : '';
-        const topDV        = dvC.length ? dvC[0][0] : '';
-        const avgTicketPerIT = itC.length > 0 ? Math.round(total / itC.length) : 0;
-
-        const summaryData = {
-          thang: mn, nam: selYear,
-          tongTicket: total, hoanthanh: done, dangXuLy: inprog,
-          pctHoanThanh,
-          nguoiDung: users.size,
-          soNhanSuIT: itC.length, chinhThuc: soChinhThuc, thueNgoai: soThueNgoai,
-          avgTicketPerIT,
-          thangTruoc: { ten: MN[prevM-1], total: prevTotal, chenh: diff },
-          topHethong: htC.slice(0,5).map(([h,v])=>({ten:h,soTicket:v})),
-          topIT: itC.slice(0,5).map(([n,v])=>({ten:n,soTicket:v})),
-          topDonVi: dvC.slice(0,4).map(([d,v])=>({ten:d,soTicket:v})),
-          loaiYC: loaiC.slice(0,6).map(([l,v])=>({loai:l,soTicket:v})),
-          nhayBaoMat: { email: emailTickets, vpn: vpnTickets, sap: sapTickets, phucTap: phucTapCount },
-        };
-
-        // Gọi Claude API
+        // ── 5 & 6. ATTT + Đánh giá (ưu tiên nội dung user đã duyệt) ────────────
+        syncReviewFromUi();
+        const useReview = !!document.getElementById('useReviewForExport')?.checked;
         let sec5 = [], sec6 = [];
-        try {
-          const apiResp = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'claude-sonnet-4-20250514',
-              max_tokens: 1800,
+
+        if (useReview && reviewText && reviewText.trim()) {
+          const { atttLines, danhGiaLines } = splitReviewText(reviewText);
+          sec5 = [SEC('- Tình hình ATTT'), ...linesToWordParas(atttLines, BULL, P, E)];
+          if (danhGiaLines && danhGiaLines.length) {
+            sec6 = [SEC('- Đánh giá và kiến nghị và đề xuất:'), ...linesToWordParas(danhGiaLines, BULL, P, E)];
+          } else {
+            sec6 = [SEC('- Đánh giá và kiến nghị và đề xuất:'), P('Nội dung nhận xét chưa có phần Đánh giá/kiến nghị. Vui lòng bổ sung ở ô Nhận xét trước khi xuất.'), E()];
+          }
+        } else {
+          // ── Claude / fallback như luồng cũ ─────────────────────────────────
+          showSt(st, 'ok', '🤖 Claude đang phân tích dữ liệu và viết báo cáo...');
+
+          // Chuẩn bị dữ liệu tóm tắt gửi lên API
+          const emailTickets = monthData.filter(r => r.hethong && (r.hethong.includes('EMAIL') || r.hethong.includes('MAIL') || r.hethong.includes('Exchange'))).length;
+          const vpnTickets   = monthData.filter(r => r.hethong && r.hethong.includes('VPN')).length;
+          const sapTickets   = monthData.filter(r => r.hethong && r.hethong.includes('SAP')).length;
+          const phucTapCount = monthData.filter(r => r.mucdo && (r.mucdo.includes('Phức') || r.mucdo.includes('Rất'))).length;
+          const pctHoanThanh = total > 0 ? Math.round(done / total * 100) : 0;
+          const topSystem    = htC.length ? htC[0][0] : '';
+          const avgTicketPerIT = itC.length > 0 ? Math.round(total / itC.length) : 0;
+
+          const summaryData = {
+            thang: mn, nam: selYear,
+            tongTicket: total, hoanthanh: done, dangXuLy: inprog,
+            pctHoanThanh,
+            nguoiDung: users.size,
+            soNhanSuIT: itC.length, chinhThuc: soChinhThuc, thueNgoai: soThueNgoai,
+            avgTicketPerIT,
+            thangTruoc: { ten: MN[prevM-1], total: prevTotal, chenh: diff },
+            topHethong: htC.slice(0,5).map(([h,v])=>({ten:h,soTicket:v})),
+            topIT: itC.slice(0,5).map(([n,v])=>({ten:n,soTicket:v})),
+            topDonVi: dvC.slice(0,4).map(([d,v])=>({ten:d,soTicket:v})),
+            loaiYC: loaiC.slice(0,6).map(([l,v])=>({loai:l,soTicket:v})),
+            nhayBaoMat: { email: emailTickets, vpn: vpnTickets, sap: sapTickets, phucTap: phucTapCount },
+          };
+
+          try {
+            const parsed = await geminiGenerateJson({
               system: `Bạn là chuyên gia IT và an ninh thông tin tại PV GAS. Nhiệm vụ: viết 2 phần cho báo cáo Helpdesk hàng tháng bằng tiếng Việt, văn phong hành chính chuyên nghiệp, phân tích sâu từ số liệu thực tế — TUYỆT ĐỐI KHÔNG copy paste, mỗi tháng phải khác nhau và có nhận xét cụ thể từ data.
 
 Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick), theo đúng schema:
@@ -1717,76 +2092,63 @@ Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick)
     "kienNghi": ["kiến nghị 1 cụ thể từ data", "kiến nghị 2 cụ thể từ data", "kiến nghị 3 cụ thể từ data", "kiến nghị 4 nếu có"]
   }
 }`,
-              messages: [{
-                role: 'user',
-                content: `Số liệu Helpdesk ${mn} ${selYear}:\n${JSON.stringify(summaryData, null, 2)}\n\nViết phần ATTT và Đánh giá kiến nghị dựa trên số liệu này.`
-              }]
-            })
-          });
+              user: `Số liệu Helpdesk ${mn} ${selYear}:\n${JSON.stringify(summaryData, null, 2)}\n\nViết phần ATTT và Đánh giá kiến nghị dựa trên số liệu này.`
+            });
+            const at = parsed.attt;
+            const dg = parsed.danhGia;
 
-          if (!apiResp.ok) throw new Error(`API error ${apiResp.status}`);
-          const apiData = await apiResp.json();
-          const rawText = apiData.content.map(c => c.text || '').join('').trim();
+            sec5 = [
+              SEC('- Tình hình ATTT'),
+              BULL('Sự cố ATTT:'),
+              BULL(at.succo, 1),
+              BULL('Hoạt động threats:'),
+              BULL(at.threats, 1),
+              BULL('Đánh giá chung:'),
+              BULL(at.danhGiaChung, 1),
+              E(),
+            ];
 
-          // Parse JSON từ response
-          const parsed = JSON.parse(rawText);
-          const at = parsed.attt;
-          const dg = parsed.danhGia;
+            sec6 = [
+              SEC('- Đánh giá và kiến nghị và đề xuất:'),
+              BULL('Đánh giá sự hiệu quả:'),
+              BULL(dg.hieuQua, 1),
+              BULL(dg.vaiTro, 1),
+              ...(dg.diemNoiBat && dg.diemNoiBat.length ? [
+                BULL('Điểm nổi bật trong kỳ:'),
+                ...dg.diemNoiBat.filter(Boolean).map(n => BULL(n, 1)),
+              ] : []),
+              BULL('Thay đổi và kiến nghị:'),
+              ...dg.kienNghi.filter(Boolean).map(r => BULL(r, 1)),
+              E(),
+            ];
 
-          // Build sec5 – ATTT từ AI
-          sec5 = [
-            SEC('- Tình hình ATTT'),
-            BULL('Sự cố ATTT:'),
-            BULL(at.succo, 1),
-            BULL('Hoạt động threats:'),
-            BULL(at.threats, 1),
-            BULL('Đánh giá chung:'),
-            BULL(at.danhGiaChung, 1),
-            E(),
-          ];
+          } catch (aiErr) {
+            console.warn('Claude API fallback:', aiErr.message);
+            const loadLevel = avgTicketPerIT > 80 ? 'rất cao' : avgTicketPerIT > 50 ? 'cao' : 'ở mức kiểm soát tốt';
+            const trendText = diff > 20 ? `tăng đáng kể (${diff} ticket)` : diff > 0 ? `tăng nhẹ ${diff} ticket` : diff < -20 ? `giảm đáng kể ${Math.abs(diff)} ticket` : diff < 0 ? `giảm nhẹ ${Math.abs(diff)} ticket` : 'duy trì ổn định';
 
-          // Build sec6 – Đánh giá & Kiến nghị từ AI
-          sec6 = [
-            SEC('- Đánh giá và kiến nghị và đề xuất:'),
-            BULL('Đánh giá sự hiệu quả:'),
-            BULL(dg.hieuQua, 1),
-            BULL(dg.vaiTro, 1),
-            ...(dg.diemNoiBat && dg.diemNoiBat.length ? [
-              BULL('Điểm nổi bật trong kỳ:'),
-              ...dg.diemNoiBat.filter(Boolean).map(n => BULL(n, 1)),
-            ] : []),
-            BULL('Thay đổi và kiến nghị:'),
-            ...dg.kienNghi.filter(Boolean).map(r => BULL(r, 1)),
-            E(),
-          ];
-
-        } catch (aiErr) {
-          // Fallback nếu API lỗi — dùng template động từ data
-          console.warn('Claude API fallback:', aiErr.message);
-          const loadLevel = avgTicketPerIT > 80 ? 'rất cao' : avgTicketPerIT > 50 ? 'cao' : 'ở mức kiểm soát tốt';
-          const trendText = diff > 20 ? `tăng đáng kể (${diff} ticket)` : diff > 0 ? `tăng nhẹ ${diff} ticket` : diff < -20 ? `giảm đáng kể ${Math.abs(diff)} ticket` : diff < 0 ? `giảm nhẹ ${Math.abs(diff)} ticket` : 'duy trì ổn định';
-
-          sec5 = [
-            SEC('- Tình hình ATTT'),
-            BULL('Sự cố ATTT:'),
-            BULL(`Không ghi nhận sự cố ATTT nghiêm trọng trong ${mn} ${selYear}.${phucTapCount > 0 ? ` Có ${phucTapCount} ticket phức tạp đã được xử lý dứt điểm.` : ''}`, 1),
-            BULL('Hoạt động threats:'),
-            BULL(emailTickets > 5 ? `Ghi nhận ${emailTickets} yêu cầu Email/Exchange, chủ yếu lỗi kết nối và hòm thư đầy. Khuyến cáo archive định kỳ.` : `Hệ thống Email hoạt động ổn định. ${vpnTickets > 0 ? `VPN phát sinh ${vpnTickets} yêu cầu.` : ''}`, 1),
-            BULL('Đánh giá chung:'),
-            BULL('Hệ thống hoạt động ổn định, không ghi nhận bất thường nghiêm trọng.', 1),
-            E(),
-          ];
-          sec6 = [
-            SEC('- Đánh giá và kiến nghị và đề xuất:'),
-            BULL('Đánh giá sự hiệu quả:'),
-            BULL(`${mn} IT Helpdesk xử lý ${total} yêu cầu (${trendText} so với tháng trước), tỷ lệ hoàn thành ${pctHoanThanh}%, mức tải ${loadLevel} (~${avgTicketPerIT} ticket/người).`, 1),
-            BULL(`Đội IT ${itC.length} nhân sự đảm bảo liên tục ${topSystem || 'các hệ thống lõi'} và hội họp Ban Lãnh đạo.`, 1),
-            BULL('Thay đổi và kiến nghị:'),
-            BULL('Triển khai hệ thống ITSM tập trung để quản lý ticket và tài sản CNTT hiệu quả hơn.', 1),
-            ...(emailTickets > 5 ? [BULL(`Gửi thông báo nhắc nhở archive email định kỳ cho CBCNV (${emailTickets} ticket Email trong kỳ).`, 1)] : []),
-            ...(avgTicketPerIT > 60 ? [BULL(`Xem xét bổ sung nhân lực IT (trung bình ${avgTicketPerIT} ticket/người/tháng).`, 1)] : []),
-            E(),
-          ];
+            sec5 = [
+              SEC('- Tình hình ATTT'),
+              BULL('Sự cố ATTT:'),
+              BULL(`Không ghi nhận sự cố ATTT nghiêm trọng trong ${mn} ${selYear}.${phucTapCount > 0 ? ` Có ${phucTapCount} ticket phức tạp đã được xử lý dứt điểm.` : ''}`, 1),
+              BULL('Hoạt động threats:'),
+              BULL(emailTickets > 5 ? `Ghi nhận ${emailTickets} yêu cầu Email/Exchange, chủ yếu lỗi kết nối và hòm thư đầy. Khuyến cáo archive định kỳ.` : `Hệ thống Email hoạt động ổn định. ${vpnTickets > 0 ? `VPN phát sinh ${vpnTickets} yêu cầu.` : ''}`, 1),
+              BULL('Đánh giá chung:'),
+              BULL('Hệ thống hoạt động ổn định, không ghi nhận bất thường nghiêm trọng.', 1),
+              E(),
+            ];
+            sec6 = [
+              SEC('- Đánh giá và kiến nghị và đề xuất:'),
+              BULL('Đánh giá sự hiệu quả:'),
+              BULL(`${mn} IT Helpdesk xử lý ${total} yêu cầu (${trendText} so với tháng trước), tỷ lệ hoàn thành ${pctHoanThanh}%, mức tải ${loadLevel} (~${avgTicketPerIT} ticket/người).`, 1),
+              BULL(`Đội IT ${itC.length} nhân sự đảm bảo liên tục ${topSystem || 'các hệ thống lõi'} và hội họp Ban Lãnh đạo.`, 1),
+              BULL('Thay đổi và kiến nghị:'),
+              BULL('Triển khai hệ thống ITSM tập trung để quản lý ticket và tài sản CNTT hiệu quả hơn.', 1),
+              ...(emailTickets > 5 ? [BULL(`Gửi thông báo nhắc nhở archive email định kỳ cho CBCNV (${emailTickets} ticket Email trong kỳ).`, 1)] : []),
+              ...(avgTicketPerIT > 60 ? [BULL(`Xem xét bổ sung nhân lực IT (trung bình ${avgTicketPerIT} ticket/người/tháng).`, 1)] : []),
+              E(),
+            ];
+          }
         }
 
         // ── Capture charts as images ─────────────────────────────────────────
@@ -1934,7 +2296,17 @@ Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick)
       }
       const allBtns = ['btnExp','btnExpBanner','floatBtn','btnPdf','floatBtnPdf'];
       allBtns.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
-      showSt(st, 'ok', '🤖 Claude đang phân tích dữ liệu...');
+      const rui = getReviewUi();
+      if (rui?.btn) rui.btn.disabled = true;
+      if (rui?.ta) rui.ta.disabled = true;
+      if (rui?.chk) rui.chk.disabled = true;
+      if (rui?.btnKey) rui.btnKey.disabled = true;
+      if (rui?.key) rui.key.disabled = true;
+      syncReviewFromUi();
+      const useReview = !!document.getElementById('useReviewForExport')?.checked;
+      showSt(st, 'ok', (useReview && reviewText && reviewText.trim())
+        ? '📝 Đang tạo PDF theo nội dung nhận xét...'
+        : '🤖 Claude đang phân tích dữ liệu...');
 
       try {
         const mn    = MN[selMonth - 1];
@@ -1971,38 +2343,39 @@ Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick)
         const dv_KH  = [...new Set(monthData.filter(r => r.donvi && !donViKDH.has(r.donvi) && !donViTM.has(r.donvi)).map(r => r.donvi))].sort();
         const fmtDV  = ma => donViNameMap[ma] || ma;
 
-        // ── Gọi Claude API cho ATTT + Đánh giá ──────────────────────────────
+        // ── ATTT + Đánh giá (ưu tiên nội dung user đã duyệt) ────────────────
         let atttHtml = '', danhGiaHtml = '';
-        try {
-          const summaryData = {
-            thang: mn, nam: selYear, tongTicket: total, hoanthanh: done, dangXuLy: inprog,
-            pctHoanThanh: pct, nguoiDung: users.size, soNhanSuIT: itC.length,
-            chinhThuc, thueNgoai, avgTicketPerIT: avgIT,
-            thangTruoc: { ten: MN[prevM-1], total: prevTotal, chenh: diff },
-            topHethong: htC.slice(0,5).map(([h,v]) => ({ ten: h, soTicket: v })),
-            topIT: itC.slice(0,5).map(([n,v]) => ({ ten: n, soTicket: v })),
-            topDonVi: dvC.slice(0,4).map(([d,v]) => ({ ten: d, soTicket: v })),
-            loaiYC: loaiC.slice(0,6).map(([l,v]) => ({ loai: l, soTicket: v })),
-            nhayBaoMat: { email: emailT, vpn: vpnT, phucTap: phucT }
-          };
-          const apiResp = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'claude-sonnet-4-20250514', max_tokens: 1800,
+        if (useReview && reviewText && reviewText.trim()) {
+          const { atttLines, danhGiaLines } = splitReviewText(reviewText);
+          atttHtml = linesToPdfHtml(atttLines);
+          danhGiaHtml = (danhGiaLines && danhGiaLines.length)
+            ? linesToPdfHtml(danhGiaLines)
+            : `<p class="b2">Nội dung nhận xét chưa có phần Đánh giá/kiến nghị. Vui lòng bổ sung ở ô Nhận xét trước khi xuất.</p>`;
+        } else {
+          try {
+            const summaryData = {
+              thang: mn, nam: selYear, tongTicket: total, hoanthanh: done, dangXuLy: inprog,
+              pctHoanThanh: pct, nguoiDung: users.size, soNhanSuIT: itC.length,
+              chinhThuc, thueNgoai, avgTicketPerIT: avgIT,
+              thangTruoc: { ten: MN[prevM-1], total: prevTotal, chenh: diff },
+              topHethong: htC.slice(0,5).map(([h,v]) => ({ ten: h, soTicket: v })),
+              topIT: itC.slice(0,5).map(([n,v]) => ({ ten: n, soTicket: v })),
+              topDonVi: dvC.slice(0,4).map(([d,v]) => ({ ten: d, soTicket: v })),
+              loaiYC: loaiC.slice(0,6).map(([l,v]) => ({ loai: l, soTicket: v })),
+              nhayBaoMat: { email: emailT, vpn: vpnT, phucTap: phucT }
+            };
+            const parsed = await geminiGenerateJson({
               system: `Bạn là chuyên gia IT và an ninh thông tin tại PV GAS. Viết 2 phần cho báo cáo Helpdesk bằng tiếng Việt, văn phong hành chính, phân tích sâu từ số liệu thực — KHÔNG copy paste, mỗi tháng phải khác nhau.\nTrả về JSON hợp lệ duy nhất (không markdown, không backtick):\n{"attt":{"succo":"2-3 câu","threats":"2-3 câu","danhGiaChung":"1-2 câu"},"danhGia":{"hieuQua":"3-4 câu","vaiTro":"2-3 câu","diemNoiBat":["câu 1","câu 2","câu 3"],"kienNghi":["kn1","kn2","kn3","kn4"]}}`,
-              messages: [{ role: 'user', content: `Số liệu Helpdesk ${mn} ${selYear}:\n${JSON.stringify(summaryData, null, 2)}` }]
-            })
-          });
-          const apiData = await apiResp.json();
-          const parsed = JSON.parse(apiData.content.map(c => c.text || '').join('').trim());
-          const at = parsed.attt, dg = parsed.danhGia;
-          atttHtml = `<p class="b1">Sự cố ATTT:</p><p class="b2">${at.succo}</p><p class="b1">Hoạt động threats:</p><p class="b2">${at.threats}</p><p class="b1">Đánh giá chung:</p><p class="b2">${at.danhGiaChung}</p>`;
-          danhGiaHtml = `<p class="b1">Đánh giá sự hiệu quả:</p><p class="b2">${dg.hieuQua}</p><p class="b2">${dg.vaiTro}</p>${dg.diemNoiBat && dg.diemNoiBat.length ? `<p class="b1">Điểm nổi bật:</p>${dg.diemNoiBat.filter(Boolean).map(n => `<p class="b2">${n}</p>`).join('')}` : ''}<p class="b1">Kiến nghị:</p>${dg.kienNghi.filter(Boolean).map(r => `<p class="b2">${r}</p>`).join('')}`;
-        } catch (e) {
-          const trendText = diff > 0 ? `tăng ${diff} ticket` : diff < 0 ? `giảm ${Math.abs(diff)} ticket` : 'tương đương tháng trước';
-          atttHtml = `<p class="b1">Sự cố ATTT:</p><p class="b2">Không ghi nhận sự cố ATTT nghiêm trọng trong ${mn} ${selYear}.${phucT > 0 ? ` Có ${phucT} ticket phức tạp đã được xử lý.` : ''}</p><p class="b1">Hoạt động threats:</p><p class="b2">${emailT > 5 ? `Ghi nhận ${emailT} yêu cầu Email/Exchange. Khuyến cáo archive định kỳ.` : `Hệ thống Email hoạt động ổn định.`}</p><p class="b1">Đánh giá chung:</p><p class="b2">Hệ thống hoạt động ổn định, không ghi nhận bất thường nghiêm trọng.</p>`;
-          danhGiaHtml = `<p class="b1">Đánh giá sự hiệu quả:</p><p class="b2">${mn} IT Helpdesk xử lý ${total} yêu cầu (${trendText}), tỷ lệ hoàn thành ${pct}%, trung bình ~${avgIT} ticket/người.</p><p class="b1">Kiến nghị:</p><p class="b2">Triển khai hệ thống ITSM tập trung để quản lý ticket và tài sản CNTT hiệu quả hơn.</p>${emailT > 5 ? `<p class="b2">Gửi thông báo nhắc nhở archive email định kỳ (${emailT} ticket Email trong kỳ).</p>` : ''}`;
+              user: `Số liệu Helpdesk ${mn} ${selYear}:\n${JSON.stringify(summaryData, null, 2)}`
+            });
+            const at = parsed.attt, dg = parsed.danhGia;
+            atttHtml = `<p class="b1">Sự cố ATTT:</p><p class="b2">${at.succo}</p><p class="b1">Hoạt động threats:</p><p class="b2">${at.threats}</p><p class="b1">Đánh giá chung:</p><p class="b2">${at.danhGiaChung}</p>`;
+            danhGiaHtml = `<p class="b1">Đánh giá sự hiệu quả:</p><p class="b2">${dg.hieuQua}</p><p class="b2">${dg.vaiTro}</p>${dg.diemNoiBat && dg.diemNoiBat.length ? `<p class="b1">Điểm nổi bật:</p>${dg.diemNoiBat.filter(Boolean).map(n => `<p class="b2">${n}</p>`).join('')}` : ''}<p class="b1">Kiến nghị:</p>${dg.kienNghi.filter(Boolean).map(r => `<p class="b2">${r}</p>`).join('')}`;
+          } catch (e) {
+            const trendText = diff > 0 ? `tăng ${diff} ticket` : diff < 0 ? `giảm ${Math.abs(diff)} ticket` : 'tương đương tháng trước';
+            atttHtml = `<p class="b1">Sự cố ATTT:</p><p class="b2">Không ghi nhận sự cố ATTT nghiêm trọng trong ${mn} ${selYear}.${phucT > 0 ? ` Có ${phucT} ticket phức tạp đã được xử lý.` : ''}</p><p class="b1">Hoạt động threats:</p><p class="b2">${emailT > 5 ? `Ghi nhận ${emailT} yêu cầu Email/Exchange. Khuyến cáo archive định kỳ.` : `Hệ thống Email hoạt động ổn định.`}</p><p class="b1">Đánh giá chung:</p><p class="b2">Hệ thống hoạt động ổn định, không ghi nhận bất thường nghiêm trọng.</p>`;
+            danhGiaHtml = `<p class="b1">Đánh giá sự hiệu quả:</p><p class="b2">${mn} IT Helpdesk xử lý ${total} yêu cầu (${trendText}), tỷ lệ hoàn thành ${pct}%, trung bình ~${avgIT} ticket/người.</p><p class="b1">Kiến nghị:</p><p class="b2">Triển khai hệ thống ITSM tập trung để quản lý ticket và tài sản CNTT hiệu quả hơn.</p>${emailT > 5 ? `<p class="b2">Gửi thông báo nhắc nhở archive email định kỳ (${emailT} ticket Email trong kỳ).</p>` : ''}`;
+          }
         }
 
         // ── Render charts ─────────────────────────────────────────────────────
@@ -2226,6 +2599,12 @@ Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick)
         console.error(ex);
       }
       allBtns.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+      const rui2 = getReviewUi();
+      if (rui2?.btn) rui2.btn.disabled = false;
+      if (rui2?.ta) rui2.ta.disabled = false;
+      if (rui2?.chk) rui2.chk.disabled = false;
+      if (rui2?.btnKey) rui2.btnKey.disabled = false;
+      if (rui2?.key) rui2.key.disabled = false;
     }
   </script>
 </body>
