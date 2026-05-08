@@ -1793,7 +1793,7 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
               spacing: { before: 0, after: 0 },
               children: [new ImageRun({
                 data: Uint8Array.from(atob(logoBase64), c => c.charCodeAt(0)),
-                transformation: { width: 54, height: 70 },
+                transformation: { width: 90, height: 118 },
                 type: 'png'
               })]
             })], 1440, { borders: noBdrs })
@@ -1801,7 +1801,7 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
 
         const letterhead = new Table({
           width: { size: 9360, type: WidthType.DXA },
-          columnWidths: [1440, 3491, 4429],
+          columnWidths: [2000, 2931, 4429],
           rows: [new TableRow({
             children: [
               logoCell,
