@@ -397,6 +397,84 @@
       border-bottom: none
     }
 
+    .hist-wrap {
+      overflow-x: auto
+    }
+
+    .hist-pager {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap
+    }
+
+    .hist-pager.show {
+      display: flex
+    }
+
+    .hist-nav {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border: 1px solid var(--bdr);
+      border-radius: var(--rs);
+      background: #fff;
+      color: var(--tx);
+      cursor: pointer;
+      transition: background .15s, border-color .15s
+    }
+
+    .hist-nav:hover:not(:disabled) {
+      background: var(--pl);
+      border-color: var(--p);
+      color: var(--p)
+    }
+
+    .hist-nav:disabled {
+      opacity: .35;
+      cursor: not-allowed
+    }
+
+    .hist-pages {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center
+    }
+
+    .hist-page-num {
+      min-width: 32px;
+      height: 32px;
+      padding: 0 8px;
+      border: 1px solid var(--bdr);
+      border-radius: var(--rs);
+      background: #fff;
+      color: var(--tx);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s
+    }
+
+    .hist-page-num:hover:not(.active) {
+      background: var(--pl);
+      border-color: var(--p);
+      color: var(--p)
+    }
+
+    .hist-page-num.active {
+      background: var(--p);
+      border-color: var(--p);
+      color: #fff
+    }
+
     .pill {
       display: inline-block;
       padding: 2px 8px;
@@ -1049,6 +1127,45 @@
         <div class="stmsg" id="expst"></div>
       </div>
 
+      <!-- Lịch sử xuất file -->
+      <div class="card">
+        <div class="ctitle">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Lịch sử xuất file
+        </div>
+        <div class="actions" style="margin-bottom:10px">
+          <button type="button" class="btn btn-o" id="btnClearHist" onclick="clearExportHistory()">Xóa lịch sử</button>
+        </div>
+        <div class="hist-wrap">
+          <table class="mtbl" id="histTbl" style="display:none">
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Loại</th>
+                <th>Tên file</th>
+              </tr>
+            </thead>
+            <tbody id="histTbody"></tbody>
+          </table>
+          <div class="hist-empty" id="histEmpty" style="padding:12px;color:var(--tx2);font-size:13px">Chưa có lần xuất nào.</div>
+        </div>
+        <div class="hist-pager" id="histPager" role="navigation" aria-label="Phân trang lịch sử xuất file">
+          <button type="button" class="hist-nav" id="histPrev" title="Trang trước" aria-label="Trang trước">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
+          <div class="hist-pages" id="histPages"></div>
+          <button type="button" class="hist-nav" id="histNext" title="Trang sau" aria-label="Trang sau">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
     </div><!-- /preview -->
     <div class="footer">PV GAS IT Helpdesk Report Generator &nbsp;·&nbsp; Dữ liệu bảo mật nội bộ</div>
   </div>
@@ -1380,6 +1497,7 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
       renderKPI();
       renderCurrentView();
       renderTable();
+      renderExportHistory();
       loadGeminiKeyToUi();
       // Reset review if switching month and user hasn't typed anything
       const rk = `${selYear}-${selMonth}`;
@@ -1513,6 +1631,108 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
 
     function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
     function showSt(el, type, msg) { el.className = `stmsg ${type} show`; el.textContent = msg }
+
+    // ── export history (localStorage) ─────────────────────────────────────────────
+    const PVGAS_HISTORY_KEY = 'pvgas_export_history';
+    const HISTORY_MAX = 20;
+    const HISTORY_PAGE_SIZE = 5;
+    let histPagerPage = 1;
+
+    function readExportHistory() {
+      try {
+        const raw = localStorage.getItem(PVGAS_HISTORY_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) { return []; }
+    }
+
+    function writeExportHistory(arr) {
+      try {
+        localStorage.setItem(PVGAS_HISTORY_KEY, JSON.stringify(arr));
+      } catch (e) { console.warn('pvgas_export_history save failed', e); }
+    }
+
+    function pushExportHistory(type, filename) {
+      const entry = { ts: new Date().toISOString(), type, filename: String(filename || '') };
+      const list = [entry, ...readExportHistory()].slice(0, HISTORY_MAX);
+      writeExportHistory(list);
+      histPagerPage = 1;
+      renderExportHistory();
+    }
+
+    function formatHistTs(iso) {
+      try {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return String(iso || '');
+        return d.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+      } catch (e) { return String(iso || ''); }
+    }
+
+    function renderExportHistory() {
+      const tbl = document.getElementById('histTbl');
+      const tbody = document.getElementById('histTbody');
+      const empty = document.getElementById('histEmpty');
+      const pager = document.getElementById('histPager');
+      const histPrev = document.getElementById('histPrev');
+      const histNext = document.getElementById('histNext');
+      const histPages = document.getElementById('histPages');
+      if (!tbl || !tbody || !empty) return;
+      const list = readExportHistory();
+      tbody.innerHTML = '';
+      if (pager) pager.classList.remove('show');
+      if (!list.length) {
+        histPagerPage = 1;
+        tbl.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      tbl.style.display = 'table';
+
+      const totalPages = Math.ceil(list.length / HISTORY_PAGE_SIZE);
+      const usePager = list.length > HISTORY_PAGE_SIZE;
+
+      if (usePager && pager && histPrev && histNext && histPages) {
+        histPagerPage = Math.min(Math.max(1, histPagerPage), totalPages);
+        pager.classList.add('show');
+        histPrev.disabled = histPagerPage <= 1;
+        histNext.disabled = histPagerPage >= totalPages;
+        histPrev.onclick = () => { if (histPagerPage > 1) { histPagerPage--; renderExportHistory(); } };
+        histNext.onclick = () => { if (histPagerPage < totalPages) { histPagerPage++; renderExportHistory(); } };
+        histPages.innerHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'hist-page-num' + (i === histPagerPage ? ' active' : '');
+          b.textContent = String(i);
+          const p = i;
+          b.onclick = () => { histPagerPage = p; renderExportHistory(); };
+          histPages.appendChild(b);
+        }
+      } else {
+        histPagerPage = 1;
+        if (pager) pager.classList.remove('show');
+        if (histPages) histPages.innerHTML = '';
+      }
+
+      const start = usePager ? (histPagerPage - 1) * HISTORY_PAGE_SIZE : 0;
+      const slice = usePager ? list.slice(start, start + HISTORY_PAGE_SIZE) : list;
+      slice.forEach(row => {
+        const tr = document.createElement('tr');
+        const typeLabel = row.type === 'pdf' ? 'PDF' : (row.type === 'word' ? 'Word' : String(row.type || '-'));
+        tr.innerHTML = `<td>${esc(formatHistTs(row.ts))}</td><td>${esc(typeLabel)}</td><td style="word-break:break-all">${esc(row.filename || '')}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function clearExportHistory() {
+      if (!readExportHistory().length) return;
+      if (!confirm('Xóa toàn bộ lịch sử xuất file trên trình duyệt này?')) return;
+      try { localStorage.removeItem(PVGAS_HISTORY_KEY); } catch (e) { }
+      histPagerPage = 1;
+      renderExportHistory();
+    }
 
     // ── export Word ───────────────────────────────────────────────────────────────
     // ── Shared color palette for charts (module level) ────────────────────────
@@ -2283,6 +2503,7 @@ Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick)
           setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 3000);
         }
         showSt(st, 'ok', '✓ Tải xuống thành công: ' + fname);
+        pushExportHistory('word', fname);
         setLoading(false);
       } catch (ex) {
         showSt(st, 'err', 'Lỗi tạo file Word: ' + ex.message);
@@ -2598,6 +2819,7 @@ Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick)
         const fname = `BaoCao_ITHelpdesk_${mn.replace(/\s/g,'')}_${selYear}.pdf`;
         pdf.save(fname);
         showSt(st, 'ok', '✓ Tải xuống thành công: ' + fname);
+        pushExportHistory('pdf', fname);
 
       } catch (ex) {
         showSt(st, 'err', 'Lỗi tạo PDF: ' + ex.message);
