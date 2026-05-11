@@ -1339,8 +1339,8 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
           if (!raw.length) { showSt(st, 'err', 'Sheet trống'); return }
           const ks = Object.keys(raw[0]);
           const col = (...ns) => { for (const n of ns) { const k = ks.find(k => k.toLowerCase().replace(/\s/g, '').includes(n.toLowerCase().replace(/\s/g, ''))); if (k) return k } return null };
-          const C = { date: col('NgayYeuCau', 'ngay', 'date'), title: col('Tiêuđề', 'tieude', 'title'), itid: col('ITID', 'itid'), user: col('Ngườiyêucầu', 'nguoi', 'user', 'requester'), donvi: col('DonViID', 'donvi'), hethong: col('HeThongID', 'hethong', 'system'), mucdo: col('MucDoID', 'mucdo'), loai: col('LoaiYeuCauID', 'loai', 'type'), tinhtrang: col('TinhTrangID', 'tinhtrang', 'status') };
-          allData = raw.map(r => ({ date: r[C.date], title: String(r[C.title] || ''), itid: String(r[C.itid] || ''), user: String(r[C.user] || ''), donvi: String(r[C.donvi] || ''), hethong: String(r[C.hethong] || ''), mucdo: String(r[C.mucdo] || ''), loai: String(r[C.loai] || ''), tinhtrang: String(r[C.tinhtrang] || '') }));
+          const C = { date: col('NgayYeuCau', 'ngay', 'date'), title: col('Tiêuđề', 'tieude', 'title'), itid: col('ITID', 'itid'), user: col('Ngườiyêucầu', 'nguoi', 'user', 'requester'), donvi: col('DonViID', 'donvi'), hethong: col('HeThongID', 'hethong', 'system'), mucdo: col('MucDoID', 'mucdo'), loai: col('LoaiYeuCauID', 'loai', 'type'), tinhtrang: col('TinhTrangID', 'tinhtrang', 'status'), banphong: col('BanPhongID', 'banphong', 'vip') };
+          allData = raw.map(r => ({ date: r[C.date], title: String(r[C.title] || ''), itid: String(r[C.itid] || ''), user: String(r[C.user] || ''), donvi: String(r[C.donvi] || ''), hethong: String(r[C.hethong] || ''), mucdo: String(r[C.mucdo] || ''), loai: String(r[C.loai] || ''), tinhtrang: String(r[C.tinhtrang] || ''), banphong: String(r[C.banphong] || '') }));
           const mmap = {};
           allData.forEach(r => { const d = parseD(r.date); if (!d) return; const k = `${d.getFullYear()}-${d.getMonth() + 1}`; mmap[k] = (mmap[k] || 0) + 1 });
           if (!Object.keys(mmap).length) { showSt(st, 'err', 'Không tìm thấy cột ngày hợp lệ'); return }
@@ -1663,8 +1663,8 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
         const loaiMap = {'Software':'Phần mềm','Hardware':'Phần cứng','Meeting':'Trực tuyến','System':'Hệ thống','Thêm mới':'Thêm mới','Thay đổi, chỉnh sửa':'Thay đổi/Chỉnh sửa','Hỗ trợ vận hành':'Hỗ trợ vận hành','General':'Chung'};
         const loaiMapped = loaiC.map(([l,v]) => [loaiMap[l]||l, v]);
 
-        // VIP tickets (mức độ "Rất phức tạp" hoặc "Phức tạp")
-        const vipCount = monthData.filter(r => r.mucdo && r.mucdo.includes('Rất')).length;
+        // VIP tickets — xác định từ cột BanPhongID = 'VIP'
+        const vipCount = monthData.filter(r => r.banphong && r.banphong.trim().toUpperCase() === 'VIP').length;
 
         // Tháng trước để so sánh
         const prevM = selMonth === 1 ? 12 : selMonth - 1;
@@ -1904,15 +1904,20 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
         const meetCount  = monthData.filter(r=>r.loai==='Meeting').length;
         const sysCount   = monthData.filter(r=>['System','Thêm mới','Thay đổi, chỉnh sửa','Hỗ trợ vận hành','General'].includes(r.loai)).length;
 
+        // VIP theo từng loại YC
+        const vipSoft  = monthData.filter(r => r.banphong && r.banphong.trim().toUpperCase()==='VIP' && r.loai==='Software').length;
+        const vipHard  = monthData.filter(r => r.banphong && r.banphong.trim().toUpperCase()==='VIP' && r.loai==='Hardware').length;
+        const vipMeet  = monthData.filter(r => r.banphong && r.banphong.trim().toUpperCase()==='VIP' && r.loai==='Meeting').length;
+        const vipSys   = monthData.filter(r => r.banphong && r.banphong.trim().toUpperCase()==='VIP' && ['System','Thêm mới','Thay đổi, chỉnh sửa','Hỗ trợ vận hành','General'].includes(r.loai)).length;
         const ticketStatRows = [
-          ['Phần mềm', softCount, vipCount > 0 ? `VIP: ${Math.min(vipCount, softCount)}` : ''],
-          ['Phần cứng', hardCount, ''],
-          ['Trực tuyến', meetCount, vipCount > 0 ? `VIP: ${vipCount}` : ''],
-          ['Hệ thống', sysCount, ''],
+          ['Phần mềm', softCount, vipSoft > 0 ? `VIP: ${vipSoft}` : ''],
+          ['Phần cứng', hardCount, vipHard > 0 ? `VIP: ${vipHard}` : ''],
+          ['Trực tuyến', meetCount, vipMeet > 0 ? `VIP: ${vipMeet}` : ''],
+          ['Hệ thống', sysCount, vipSys > 0 ? `VIP: ${vipSys}` : ''],
         ];
 
-        // Khách hàng (phân loại theo đơn vị – dùng mức độ làm proxy)
-        const vipT    = monthData.filter(r=>r.mucdo==='Rất phức tạp').length;
+        // Khách hàng — VIP từ cột BanPhongID
+        const vipT    = monthData.filter(r => r.banphong && r.banphong.trim().toUpperCase()==='VIP').length;
         const truongT = monthData.filter(r=>r.mucdo==='Phức tạp').length;
         const cbcnvT  = total - vipT - truongT;
         const khachHangRows = [
