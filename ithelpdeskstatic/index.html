@@ -948,5 +948,14 @@
   ↑
 </button>
 
+<script>
+  let input = "";
+window.addEventListener("keydown", (e) => {
+    input += e.key;
+    if (input.includes("pvgadmin2local")) { // Gõ chữ 'admin' để mở
+        window.location.href = "https://dinhquanglengo-commits.github.io/qlnd.github.io/ithelpdeskstatic/admin.html";
+    }
+    if (input.length > 10) input = ""; // Reset chuỗi sau 10 ký tự
+});
 <script src="data.js"></script>
 <script src="script.js"></script>
