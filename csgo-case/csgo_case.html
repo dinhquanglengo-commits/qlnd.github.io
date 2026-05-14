@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Case Opening</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f0f1a;color:#c8c8c8;font-family:'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+#app{max-width:900px;margin:0 auto;padding:16px}
+
+/* Header */
+.header{text-align:center;padding:20px 0 10px}
+.header h1{font-size:28px;color:#e4b000;letter-spacing:3px;text-shadow:0 0 20px #e4b00055}
+.header p{font-size:12px;color:#666;margin-top:4px}
+.balance{display:inline-flex;align-items:center;gap:6px;background:#1a1a2e;border:1px solid #333;border-radius:20px;padding:6px 16px;margin-top:10px;font-size:14px}
+.balance span{color:#e4b000;font-weight:bold;font-size:16px}
+
+/* Case selector */
+.case-tabs{display:flex;gap:8px;justify-content:center;margin:16px 0 10px;flex-wrap:wrap}
+.case-tab{background:#1a1a2e;border:2px solid #2a2a3e;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:12px;color:#aaa;transition:all 0.2s;text-align:center}
+.case-tab:hover{border-color:#555}
+.case-tab.active{border-color:#e4b000;color:#e4b000;background:#1e1a10}
+.case-tab .case-emoji{font-size:22px;display:block;margin-bottom:3px}
+
+/* Main case display */
+.case-display{text-align:center;margin:10px 0}
+.case-img{font-size:80px;filter:drop-shadow(0 0 20px #e4b00044);animation:casePulse 3s ease-in-out infinite;cursor:pointer;transition:transform 0.2s}
+.case-img:hover{transform:scale(1.05)}
+@keyframes casePulse{0%,100%{filter:drop-shadow(0 0 16px #e4b00033)}50%{filter:drop-shadow(0 0 30px #e4b00077)}}
+.case-name{font-size:18px;color:#fff;margin:8px 0 2px;font-weight:bold}
+.case-price{font-size:13px;color:#aaa}
+
+/* Spin area */
+.spin-container{position:relative;margin:18px 0;overflow:hidden;border-radius:8px;border:2px solid #333}
+.spin-track-wrap{width:100%;overflow:hidden;position:relative;height:110px;background:#111}
+.spin-track{display:flex;gap:4px;padding:8px 4px;will-change:transform;position:absolute;top:0;left:0}
+.spin-item{min-width:100px;height:94px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:32px;border:2px solid transparent;flex-shrink:0;position:relative;overflow:hidden}
+.spin-item .item-name{font-size:8px;color:#ccc;margin-top:4px;text-align:center;padding:0 4px;line-height:1.2}
+.spin-item .item-wear{font-size:7px;color:#888;margin-top:1px}
+/* Rarity colors */
+.r-blue{background:linear-gradient(180deg,#1a2a3a,#0d1520);border-color:#4a90d9}
+.r-purple{background:linear-gradient(180deg,#2a1a3a,#15091e);border-color:#9b59b6}
+.r-pink{background:linear-gradient(180deg,#3a1a2e,#1e0915);border-color:#e91e8c}
+.r-red{background:linear-gradient(180deg,#3a1a1a,#1e0909);border-color:#eb4b4b}
+.r-gold{background:linear-gradient(180deg,#2e2200,#1a1300);border-color:#e4b000}
+/* Center line */
+.spin-needle{position:absolute;top:0;left:50%;transform:translateX(-50%);width:3px;height:100%;background:#e4b000;z-index:10;box-shadow:0 0 10px #e4b000}
+.spin-needle::before,.spin-needle::after{content:'';position:absolute;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top-color:#e4b000}
+.spin-needle::before{top:0;border-top:none;border-bottom-color:#e4b000}
+.spin-needle::after{bottom:0;border-bottom:none;border-top-color:#e4b000}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;justify-content:center;margin:12px 0;flex-wrap:wrap}
+.btn-open{background:linear-gradient(135deg,#e4b000,#b88800);border:none;border-radius:8px;color:#000;font-size:15px;font-weight:bold;padding:12px 32px;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.btn-open:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 4px 20px #e4b00066}
+.btn-open:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.btn-open10{background:linear-gradient(135deg,#1a6e1a,#0e4a0e);border:1px solid #2a9a2a;border-radius:8px;color:#4aee4a;font-size:13px;font-weight:bold;padding:10px 22px;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.btn-open10:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 4px 16px #2a9a2a44}
+.btn-open10:disabled{opacity:0.4;cursor:not-allowed}
+.btn-addcoin{background:#1a1a2e;border:1px solid #4a4a6e;border-radius:8px;color:#aaa;font-size:12px;padding:10px 18px;cursor:pointer;font-family:inherit;transition:all 0.15s}
+.btn-addcoin:hover{border-color:#888;color:#fff}
+
+/* Result overlay */
+.result-overlay{display:none;position:fixed;inset:0;background:#000000cc;z-index:100;align-items:center;justify-content:center}
+.result-overlay.show{display:flex}
+.result-card{background:#1a1a2e;border-radius:16px;padding:30px 40px;text-align:center;max-width:360px;width:90%;animation:popIn 0.35s cubic-bezier(.17,.67,.3,1.3)}
+@keyframes popIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.result-rarity{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.result-icon{font-size:72px;margin:10px 0;filter:drop-shadow(0 0 20px currentColor)}
+.result-name{font-size:20px;font-weight:bold;color:#fff;margin-bottom:4px}
+.result-wear{font-size:13px;color:#888;margin-bottom:6px}
+.result-value{font-size:14px;color:#e4b000;margin-bottom:16px}
+.btn-close{background:#e4b000;border:none;border-radius:8px;color:#000;font-size:13px;font-weight:bold;padding:10px 28px;cursor:pointer;font-family:inherit}
+.btn-sell{background:#1a3a1a;border:1px solid #2a6a2a;border-radius:8px;color:#4aee4a;font-size:12px;padding:8px 18px;cursor:pointer;font-family:inherit;margin-left:8px}
+
+/* Inventory */
+.inv-header{display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px}
+.inv-header h3{font-size:14px;color:#aaa;letter-spacing:1px}
+.inv-value{font-size:12px;color:#e4b000}
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;max-height:200px;overflow-y:auto;padding-right:4px}
+.inv-item{border-radius:6px;padding:8px 4px;text-align:center;cursor:pointer;transition:all 0.15s;border:1px solid transparent}
+.inv-item:hover{transform:scale(1.05)}
+.inv-item .inv-icon{font-size:26px}
+.inv-item .inv-name{font-size:8px;color:#ccc;margin-top:3px;line-height:1.2}
+.inv-item .inv-val{font-size:8px;color:#e4b000;margin-top:1px}
+.inv-empty{color:#444;font-size:12px;text-align:center;padding:20px}
+
+/* Odds */
+.odds-section{margin:14px 0}
+.odds-toggle{background:none;border:none;color:#666;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline}
+.odds-table{display:none;margin-top:8px;background:#111;border-radius:8px;padding:10px;font-size:11px}
+.odds-table.show{display:block}
+.odds-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #1a1a1a}
+.odds-row:last-child{border:none}
+
+/* Notification */
+.notif{position:fixed;top:20px;right:20px;background:#1a2e1a;border:1px solid #2a6a2a;border-radius:8px;padding:10px 16px;font-size:13px;color:#4aee4a;z-index:200;animation:slideIn 0.3s ease;display:none}
+.notif.show{display:block}
+@keyframes slideIn{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* History strip */
+.history-strip{display:flex;gap:4px;margin:8px 0;overflow-x:auto;padding-bottom:4px;min-height:36px}
+.hist-dot{min-width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:1px solid transparent}
+
+/* Stats */
+.stats-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.stat-box{background:#111;border-radius:6px;padding:6px 14px;text-align:center}
+.stat-box .sv{font-size:16px;color:#e4b000;font-weight:bold}
+.stat-box .sl{font-size:10px;color:#555;margin-top:1px}
+
+/* PnL */
+.pnl-info{display:none;align-items:center;gap:6px;font-size:11px;color:#666;background:#111;border-radius:6px;padding:4px 10px;white-space:nowrap}
+.pnl-info span{font-weight:bold}
+.pnl-profit{color:#4aee4a!important}
+.pnl-loss{color:#eb4b4b!important}
+
+/* Level Up Modal */
+.buff-cards { display:flex; gap:15px; justify-content:center; margin-top:20px; flex-wrap:wrap }
+.buff-card { background:#111; border:2px solid #333; border-radius:12px; padding:20px; cursor:pointer; width:140px; transition:all 0.2s; display:flex; flex-direction:column; align-items:center; text-align:center }
+.buff-card:hover { border-color:#e4b000; transform:translateY(-5px); box-shadow:0 10px 20px #e4b00044 }
+.buff-icon { font-size:40px; margin-bottom:10px }
+.buff-title { font-size:14px; color:#fff; font-weight:bold; margin-bottom:5px }
+.buff-desc { font-size:11px; color:#aaa; line-height:1.4 }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1>CS CASE SIMULATOR</h1>
+    <p>Open cases · Get knives · Survive</p>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px;">
+      <div class="balance" style="margin-top:0; font-size:14px">🏆 Round <span id="ui-round">1</span></div>
+      <div class="balance" style="margin-top:0; font-size:14px">💰 <span id="balance">500</span> coins</div>
+      <div class="balance" style="margin-top:0; font-size:14px">🎯 Goal: <span id="ui-goal">1000</span></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:10px; font-size:12px; color:#aaa">
+      <div>🍀 Luck: <span id="ui-buff-luck" style="color:#e4b000">0</span></div>
+      <div>📈 Sell Val: +<span id="ui-buff-sell" style="color:#4aee4a">0</span>%</div>
+      <div>💸 Start Gold: <span id="ui-buff-gold" style="color:#e4b000">500</span></div>
+    </div>
+  </div>
+
+  <!-- Case tabs -->
+  <div class="case-tabs" id="case-tabs"></div>
+
+  <!-- Case display -->
+  <div class="case-display">
+    <div class="case-img" id="case-icon" onclick="openCases(1)">📦</div>
+    <div class="case-name" id="case-name">Weapon Case</div>
+    <div class="case-price" id="case-price">Price: <b style="color:#e4b000">50 coins</b></div>
+  </div>
+
+  <!-- Spin -->
+  <div class="spin-container" id="spin-container">
+    <div class="spin-needle"></div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="btn-row">
+    <button class="btn-open" id="btn1" onclick="openCases(1)">Open 1x</button>
+    <button class="btn-open" id="btn3" onclick="openCases(3)">Open 3x</button>
+    <button class="btn-open10" id="btn10" onclick="openCases(10)">Open 10x</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-box"><div class="sv" id="s-opened">0</div><div class="sl">Cases Opened</div></div>
+    <div class="stat-box"><div class="sv" id="s-knives">0</div><div class="sl">Knives Found</div></div>
+    <div class="pnl-info" id="pnl-info" style="display:flex">
+      💸 Spent: <span id="pnl-spent">0</span>&nbsp;·&nbsp;
+      🎒 Got: <span id="pnl-got">0</span>&nbsp;·&nbsp;
+      <span id="pnl-net">±0</span>
+    </div>
+  </div>
+
+  <!-- Drop history -->
+  <div class="history-strip" id="history-strip"></div>
+
+  <!-- Odds -->
+  <div class="odds-section" style="text-align:center">
+    <button class="odds-toggle" onclick="toggleOdds()">📊 View Drop Rates</button>
+    <div class="odds-table" id="odds-table"></div>
+  </div>
+
+  <!-- Inventory -->
+  <div class="inv-header">
+    <h3>INVENTORY</h3>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="pnl-info" id="turn-pnl" style="display:none">
+        🎲 Turn&nbsp;·&nbsp;💸 Spent: <span id="t-spent">0</span>&nbsp;·&nbsp;
+        🎒 Got: <span id="t-got">0</span>&nbsp;·&nbsp;
+        <span id="t-net">±0</span>
+      </div>
+      <button class="btn-sell" id="btn-sell-all" onclick="sellAll()" style="font-size:11px;padding:5px 12px;display:none">Sell All</button>
+    </div>
+  </div>
+  <div class="inv-grid" id="inv-grid"><div class="inv-empty">No items yet. Open a case!</div></div>
+</div>
+
+<!-- Result overlay -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-card" id="result-card">
+    <div class="result-rarity" id="res-rarity">RARE</div>
+    <div class="result-icon" id="res-icon">🔫</div>
+    <div class="result-name" id="res-name">AK-47 | Redline</div>
+    <div class="result-wear" id="res-wear">Factory New</div>
+    <div class="result-value" id="res-value">Value: 120 coins</div>
+    <div>
+      <button class="btn-close" onclick="closeResult(false)">Keep</button>
+      <button class="btn-sell" onclick="closeResult(true)">Sell</button>
+    </div>
+  </div>
+</div>
+
+<!-- Level Up overlay -->
+<div class="result-overlay" id="levelup-overlay">
+  <div class="result-card" style="max-width:550px; width:95%">
+    <div class="result-rarity" style="font-size:24px; color:#e4b000; margin-bottom:5px">ROUND CLEAR!</div>
+    <div style="font-size:14px; color:#ccc;">Choose a buff for the next round</div>
+    <div class="buff-cards">
+      <div class="buff-card" onclick="selectBuff('luck')">
+        <div class="buff-icon">🍀</div>
+        <div class="buff-title">+10% Luck</div>
+        <div class="buff-desc">Increase chance of Restricted (Purple) or better items.</div>
+      </div>
+      <div class="buff-card" onclick="selectBuff('sell')">
+        <div class="buff-icon">📈</div>
+        <div class="buff-title">+10% Sell Val</div>
+        <div class="buff-desc">All items sell for 10% more coins. Stacks.</div>
+      </div>
+      <div class="buff-card" onclick="selectBuff('gold')">
+        <div class="buff-icon">💸</div>
+        <div class="buff-title">+100 Start Gold</div>
+        <div class="buff-desc">Start every future round with 100 extra coins.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Endgame overlay -->
+<div class="result-overlay" id="endgame-overlay">
+  <div class="result-card">
+    <div class="result-rarity" id="end-title" style="font-size:24px;margin-bottom:10px">GAME OVER</div>
+    <div style="font-size:14px;color:#ccc;margin-bottom:20px" id="end-desc">You ran out of coins.</div>
+    <button class="btn-open" onclick="restartGame()">Play Again</button>
+  </div>
+</div>
+
+<!-- Notification -->
+<div class="notif" id="notif"></div>
+
+<script src="data.js"></script>
+<script>
+// ── STATE ──
+let currentRound = 1, currentGoal = 1000;
+let buffs = { luck: 0, sellMult: 1.0, startGold: 0 };
+let balance = 500, inventory = [], stats = {opened:0,knives:0,spent:0,earned:0}, currentCase = 0;
+let spinning = false, pendingItem = null, turnSpent = null, turnGot = null, pendingSpent = 0;
+
+// ── INIT ──
+buildTabs();
+updateUI();
+selectCase(0, document.querySelector('.case-tab'));
+
+function buildTabs() {
+  const c = document.getElementById('case-tabs');
+  CASES.forEach((cs, i) => {
+    const d = document.createElement('div');
+    d.className = 'case-tab' + (i===0?' active':'');
+    const caseVisual = cs.img ? `<img src="${cs.img}" style="max-width:40px;max-height:28px;object-fit:contain;">` : `<span style="font-size:22px;line-height:1;">${cs.icon}</span>`;
+    d.innerHTML = `<div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">${caseVisual}</div>${cs.name}<br><small style="color:#666">${cs.price} coins</small>`;
+    d.onclick = () => selectCase(i, d);
+    c.appendChild(d);
+  });
+}
+
+function selectCase(i, el) {
+  currentCase = i;
+  document.querySelectorAll('.case-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const cs = CASES[i];
+  if (cs.img) {
+    document.getElementById('case-icon').innerHTML = `<img src="${cs.img}" style="max-height:140px;max-width:200px;object-fit:contain;cursor:pointer;">`;
+  } else {
+    document.getElementById('case-icon').textContent = cs.icon;
+  }
+  document.getElementById('case-name').textContent = cs.name;
+  document.getElementById('case-price').innerHTML = `Price: <b style="color:#e4b000">${cs.price} coins</b>`;
+  buildTrack();
+  buildOdds();
+}
+
+function buildOdds() {
+  const cs = CASES[currentCase];
+  let html = '';
+  RARITIES.forEach(r => {
+    html += `<div class="odds-row"><span style="color:${r.color}">${r.label}</span><span>${(r.chance*100).toFixed(4)}%</span></div>`;
+  });
+  document.getElementById('odds-table').innerHTML = html;
+}
+
+function toggleOdds() {
+  document.getElementById('odds-table').classList.toggle('show');
+}
+
+// ── SPIN TRACK ──
+function buildTracks(items = []) {
+  const container = document.getElementById('spin-container');
+  container.innerHTML = '<div class="spin-needle"></div>';
+  const cs = CASES[currentCase];
+  const allItems = getAllItems(cs);
+  const tracks = [];
+  
+  const count = items.length || 1;
+  const isFast = count >= 10;
+  
+  for (let t = 0; t < count; t++) {
+    const outerWrap = document.createElement('div');
+    const wrap = document.createElement('div');
+    wrap.className = 'spin-track-wrap';
+    
+    if (isFast) {
+      outerWrap.style.height = '55px';
+      outerWrap.style.marginBottom = '2px';
+      wrap.style.transform = 'scale(0.5)';
+      wrap.style.transformOrigin = 'top left';
+      wrap.style.width = '200%';
+    } else if (count === 3) {
+      outerWrap.style.height = '88px';
+      outerWrap.style.marginBottom = '2px';
+      wrap.style.transform = 'scale(0.8)';
+      wrap.style.transformOrigin = 'top left';
+      wrap.style.width = '125%';
+    } else {
+      outerWrap.style.height = '110px';
+    }
+    
+    const track = document.createElement('div');
+    track.className = 'spin-track';
+    
+    for (let i = 0; i < 60; i++) {
+      const winner = items[t] || null;
+      const item = winner && i === 48 ? winner : allItems[Math.floor(Math.random()*allItems.length)];
+      const r = RARITIES.find(x => x.id === item.rarity);
+      const div = document.createElement('div');
+      div.className = `spin-item ${r.cls}`;
+      const visual = item.img ? `<img src="${item.img}" style="max-height:40px;max-width:80px;object-fit:contain">` : `<div style="font-size:30px">${item.icon}</div>`;
+      div.innerHTML = `<div style="height:40px;display:flex;align-items:center;justify-content:center">${visual}</div><div class="item-name">${item.name}</div><div class="item-wear">${item.wearShort||''}</div>`;
+      if (winner && i === 48) div.dataset.winner = '1';
+      track.appendChild(div);
+    }
+    wrap.appendChild(track);
+    outerWrap.appendChild(wrap);
+    container.appendChild(outerWrap);
+    tracks.push(track);
+  }
+  return tracks;
+}
+
+function buildTrack() {
+  buildTracks();
+}
+
+function getAllItems(cs) {
+  const out = [];
+  Object.entries(cs.items).forEach(([rarity, arr]) => {
+    arr.forEach(it => {
+      const w = pickWear();
+      out.push({...it, rarity, wearShort: w.short, wearLabel: w.label, value: Math.floor(it.base * w.mult * buffs.sellMult)});
+    });
+  });
+  return out;
+}
+
+// ── ROLL ──
+function rollItem(cs) {
+  const adjRarities = RARITIES.map(r => ({...r}));
+  if (buffs.luck > 0) {
+    const mult = Math.pow(1.1, buffs.luck);
+    let totalInc = 0;
+    adjRarities.forEach(r => {
+      if (r.id !== 'blue') {
+        const n = r.chance * mult;
+        totalInc += (n - r.chance);
+        r.chance = n;
+      }
+    });
+    const blueObj = adjRarities.find(r => r.id === 'blue');
+    blueObj.chance = Math.max(0, blueObj.chance - totalInc);
+  }
+
+  const rand = Math.random();
+  let cumul = 0;
+  let rarity;
+  for (const r of adjRarities) {
+    cumul += r.chance;
+    if (rand < cumul) { rarity = r.id; break; }
+  }
+  rarity = rarity || 'blue';
+  const pool = cs.items[rarity];
+  const base = pool[Math.floor(Math.random()*pool.length)];
+  const w = pickWear();
+  return {...base, rarity, wearShort: w.short, wearLabel: w.label, value: Math.floor(base.base * w.mult * buffs.sellMult)};
+}
+
+function pickWear() {
+  const total = WEAR_WEIGHTS.reduce((a,b)=>a+b,0);
+  let r = Math.random()*total;
+  for (let i=0;i<WEAR.length;i++) { r -= WEAR_WEIGHTS[i]; if (r<=0) return WEAR[i]; }
+  return WEAR[2];
+}
+
+// ── OPEN CASES ──
+function openCases(count) {
+  if (spinning) return;
+  const cs = CASES[currentCase];
+  const cost = cs.price * count;
+  if (balance < cost) { showNotif('Not enough coins!'); return; }
+  balance -= cost;
+  stats.opened += count; stats.spent += cost;
+  
+  if (count === 1) {
+    pendingSpent = cost;
+  } else {
+    turnSpent = cost;
+  }
+  
+  updateBalance();
+  updateStats();
+  
+  const items = Array.from({length:count}, () => rollItem(cs));
+  
+  if (count === 1) {
+    pendingItem = items[0];
+  }
+  
+  spinToMultiple(items);
+}
+
+function spinToMultiple(items) {
+  spinning = true;
+  setBtns(true);
+  const tracks = buildTracks(items);
+  const isFast = items.length >= 10;
+  const duration = isFast ? 1.0 : 4.5;
+  const timeout = isFast ? 1200 : 4700;
+  
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      tracks.forEach(track => {
+        const winnerEl = track.children[48];
+        const winnerCenter = winnerEl.offsetLeft + (winnerEl.offsetWidth / 2);
+        const containerW = track.parentElement.offsetWidth;
+        const center = containerW / 2;
+        const nudge = Math.floor(Math.random() * 60) - 30;
+        const translateX = -(winnerCenter + nudge - center);
+        
+        track.style.transition = 'none';
+        track.style.transform = 'translateX(0)';
+        void track.offsetWidth;
+        track.style.transition = `transform ${duration}s cubic-bezier(0.08,0.85,0.35,1)`;
+        track.style.transform = `translateX(${translateX}px)`;
+      });
+      
+      setTimeout(() => {
+        spinning = false;
+        if (items.length === 1) {
+          showResult(items[0]);
+        } else {
+          items.forEach(it => { addToInventory(it); addHistory(it); });
+          const best = items.reduce((a,b) => b.value>a.value?b:a);
+          if (best.rarity==='gold') stats.knives++;
+          const totalVal = items.reduce((sum, it) => sum + it.value, 0);
+          stats.earned += totalVal;
+          turnGot = totalVal;
+          updateStats();
+          updateInv();
+          updateTurnPnL();
+          showNotif(`Opened ${items.length} cases! Best: ${best.name} (${best.value} coins)`);
+          checkGameEnd();
+          setBtns(false);
+        }
+      }, timeout);
+    });
+  });
+}
+
+// ── RESULT ──
+function showResult(item) {
+  const r = RARITIES.find(x => x.id === item.rarity);
+  document.getElementById('res-rarity').textContent = r.label;
+  document.getElementById('res-rarity').style.color = r.color;
+  if (item.img) {
+    document.getElementById('res-icon').innerHTML = `<img src="${item.img}" style="max-width:100%;max-height:120px;object-fit:contain">`;
+  } else {
+    document.getElementById('res-icon').textContent = item.icon;
+  }
+  document.getElementById('res-icon').style.color = r.color;
+  document.getElementById('res-name').textContent = item.name;
+  document.getElementById('res-wear').textContent = item.wearLabel;
+  document.getElementById('res-value').textContent = 'Value: ' + item.value + ' coins';
+  document.getElementById('result-overlay').classList.add('show');
+  if (item.rarity === 'gold') stats.knives++;
+  turnSpent = pendingSpent;
+  turnGot = item.value;
+  updateTurnPnL();
+  updateStats();
+}
+
+function closeResult(sell) {
+  document.getElementById('result-overlay').classList.remove('show');
+  if (!pendingItem) return;
+  stats.earned += pendingItem.value;
+  if (sell) {
+    balance += pendingItem.value;
+    updateBalance();
+    showNotif(`Sold for ${pendingItem.value} coins!`);
+  } else {
+    addToInventory(pendingItem);
+    updateInv();
+  }
+  addHistory(pendingItem);
+  pendingItem = null;
+  setBtns(false);
+  buildTrack();
+  checkGameEnd();
+}
+
+// ── INVENTORY ──
+function addToInventory(item) {
+  inventory.push({...item, id: Date.now() + Math.random()});
+}
+
+function renderInv() {
+  const grid = document.getElementById('inv-grid');
+  const sellAllBtn = document.getElementById('btn-sell-all');
+  if (!inventory.length) {
+    grid.innerHTML = '<div class="inv-empty">No items yet. Open a case!</div>';
+    sellAllBtn.style.display = 'none';
+    updatePnL();
+    return;
+  }
+  grid.innerHTML = '';
+  inventory.slice().reverse().forEach(it => {
+    const r = RARITIES.find(x => x.id === it.rarity);
+    const div = document.createElement('div');
+    div.className = `inv-item ${r.cls}`;
+    div.style.borderColor = r.color + '66';
+    const visual = it.img ? `<img src="${it.img}" style="max-height:30px;max-width:90%;object-fit:contain">` : `<div class="inv-icon">${it.icon}</div>`;
+    div.innerHTML = `<div style="height:35px;display:flex;align-items:center;justify-content:center">${visual}</div><div class="inv-name">${it.name}</div><div class="inv-val">${it.value}c</div>`;
+    div.title = `${it.name} (${it.wearLabel}) — ${it.value} coins\nClick to sell`;
+    div.onclick = () => sellFromInv(it.id, it.value, it.name);
+    grid.appendChild(div);
+  });
+  sellAllBtn.style.display = 'block';
+  updatePnL();
+}
+
+function updateInv() { renderInv(); }
+
+function sellFromInv(id, val, name) {
+  if (!confirm(`Sell ${name} for ${val} coins?`)) return;
+  inventory = inventory.filter(i => i.id !== id);
+  balance += val;
+  updateBalance();
+  updateInv();
+  showNotif(`Sold ${name} for ${val} coins!`);
+  checkGameEnd();
+}
+
+function sellAll() {
+  if (!inventory.length) return;
+  const total = inventory.reduce((sum, it) => sum + it.value, 0);
+  if (!confirm(`Sell all ${inventory.length} items for ${total} coins?`)) return;
+  balance += total;
+  inventory = [];
+  updateBalance();
+  updateInv();
+  showNotif(`Sold all items for ${total} coins!`);
+  checkGameEnd();
+}
+
+// ── HISTORY STRIP ──
+function addHistory(item) {
+  const r = RARITIES.find(x => x.id === item.rarity);
+  const strip = document.getElementById('history-strip');
+  const dot = document.createElement('div');
+  dot.className = `hist-dot ${r.cls}`;
+  dot.style.borderColor = r.color;
+  dot.title = item.name + ' — ' + item.value + ' coins';
+  if (item.img) {
+    dot.innerHTML = `<img src="${item.img}" style="max-width:80%;max-height:80%;object-fit:contain">`;
+  } else {
+    dot.textContent = item.icon;
+  }
+  strip.insertBefore(dot, strip.firstChild);
+  if (strip.children.length > 40) strip.removeChild(strip.lastChild);
+}
+
+// ── UI HELPERS ──
+function updateBalance() {
+  document.getElementById('balance').textContent = balance;
+}
+function updateStats() {
+  document.getElementById('s-opened').textContent = stats.opened;
+  document.getElementById('s-knives').textContent = stats.knives;
+  updatePnL();
+}
+function updatePnL() {
+  const got = stats.earned;
+  const net = got - stats.spent;
+  document.getElementById('pnl-spent').textContent = stats.spent;
+  document.getElementById('pnl-got').textContent = got;
+  const netEl = document.getElementById('pnl-net');
+  netEl.textContent = (net >= 0 ? '+' : '') + net + ' coins';
+  netEl.className = net >= 0 ? 'pnl-profit' : 'pnl-loss';
+}
+function updateTurnPnL() {
+  if (turnSpent === null || turnGot === null) return;
+  const net = turnGot - turnSpent;
+  document.getElementById('t-spent').textContent = turnSpent;
+  document.getElementById('t-got').textContent = turnGot;
+  const netEl = document.getElementById('t-net');
+  netEl.textContent = (net >= 0 ? '+' : '') + net + ' coins';
+  netEl.className = net >= 0 ? 'pnl-profit' : 'pnl-loss';
+  document.getElementById('turn-pnl').style.display = 'inline-flex';
+}
+function setBtns(dis) {
+  document.getElementById('btn1').disabled = dis;
+  document.getElementById('btn3').disabled = dis;
+  document.getElementById('btn10').disabled = dis;
+}
+function checkGameEnd() {
+  const invValue = inventory.reduce((sum, it) => sum + it.value, 0);
+  const totalAssets = balance + invValue;
+  if (totalAssets >= currentGoal) {
+    document.getElementById('levelup-overlay').classList.add('show');
+  } else if (totalAssets < 50) {
+    showEndGame(false);
+  }
+}
+function selectBuff(type) {
+  if (type === 'luck') buffs.luck += 1;
+  else if (type === 'sell') buffs.sellMult += 0.1;
+  else if (type === 'gold') buffs.startGold += 100;
+  
+  document.getElementById('levelup-overlay').classList.remove('show');
+  currentRound++;
+  currentGoal = Math.floor(1000 * Math.pow(1.5, currentRound - 1));
+  startNewRound();
+}
+function startNewRound() {
+  balance = 500 + buffs.startGold;
+  inventory = [];
+  turnSpent = null; turnGot = null; pendingSpent = 0; pendingItem = null;
+  document.getElementById('history-strip').innerHTML = '';
+  document.getElementById('turn-pnl').style.display = 'none';
+  updateUI();
+  buildTrack();
+}
+function showEndGame(isWin) {
+  const title = document.getElementById('end-title');
+  const desc = document.getElementById('end-desc');
+  if (isWin) {
+    title.textContent = 'VICTORY!';
+    title.style.color = '#4aee4a';
+    desc.textContent = 'You reached 10,000+ coins!';
+  } else {
+    title.textContent = 'GAME OVER';
+    title.style.color = '#eb4b4b';
+    desc.textContent = 'You went bankrupt (Assets < 50).';
+  }
+  document.getElementById('endgame-overlay').classList.add('show');
+}
+function restartGame() {
+  currentRound = 1;
+  currentGoal = 1000;
+  buffs = { luck: 0, sellMult: 1.0, startGold: 0 };
+  stats = {opened:0,knives:0,spent:0,earned:0};
+  document.getElementById('endgame-overlay').classList.remove('show');
+  startNewRound();
+}
+function updateUI() {
+  document.getElementById('ui-round').textContent = currentRound;
+  document.getElementById('ui-goal').textContent = currentGoal;
+  document.getElementById('ui-buff-luck').textContent = buffs.luck;
+  document.getElementById('ui-buff-sell').textContent = Math.round((buffs.sellMult - 1) * 100);
+  document.getElementById('ui-buff-gold').textContent = 500 + buffs.startGold;
+  updateBalance();
+  updateStats();
+  updateInv();
+}
+function showNotif(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
