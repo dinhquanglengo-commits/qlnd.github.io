@@ -482,6 +482,15 @@
       margin-bottom: 10px
     }
 
+
+    .cell-sel {
+      width: 100%; min-width: 90px; padding: 3px 4px;
+      border: 1px solid var(--bdr); border-radius: 3px;
+      font-size: 12px; font-family: var(--font); color: var(--tx);
+      background: #fff; cursor: pointer;
+    }
+    .cell-sel:focus { outline: none; border-color: var(--p); background: var(--pl); }
+
     .cell-inp {
       width: 100%;
       min-width: 72px;
@@ -498,6 +507,46 @@
       outline: none;
       border-color: var(--p);
       box-shadow: 0 0 0 2px var(--pl)
+    }
+
+
+    /* ── Text Edit Modal ── */
+    .txt-modal-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,.45);
+      z-index:9999; align-items:center; justify-content:center;
+    }
+    .txt-modal-overlay.open { display:flex; }
+    .txt-modal {
+      background:#fff; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+      width:min(600px,90vw); padding:1.5rem; display:flex; flex-direction:column; gap:1rem;
+      animation:modalIn .18s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes modalIn { from{transform:scale(.9);opacity:0} to{transform:scale(1);opacity:1} }
+    .txt-modal-title { font-size:14px; font-weight:700; color:var(--tx); }
+    .txt-modal-ta {
+      width:100%; height:160px; padding:10px 12px; border:1.5px solid var(--bdr);
+      border-radius:var(--rs); font-size:13px; font-family:var(--font); color:var(--tx);
+      resize:vertical; line-height:1.6;
+    }
+    .txt-modal-ta:focus { outline:none; border-color:var(--p); box-shadow:0 0 0 3px var(--pl); }
+    .txt-modal-footer { display:flex; justify-content:flex-end; gap:8px; }
+    /* compact cell trigger */
+    .cell-text-trigger {
+      width:100%; min-width:120px; max-width:220px; padding:4px 8px;
+      border:1px solid var(--bdr); border-radius:4px; background:#fff;
+      font-size:12px; color:var(--tx); cursor:pointer; text-align:left;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      transition:border-color .15s;
+    }
+    .cell-text-trigger:hover { border-color:var(--p); color:var(--p); background:var(--pl); }
+    .cell-text-trigger.empty { color:var(--tx3); font-style:italic; }
+
+    .cell-ta {
+      min-width: 200px;
+      max-width: 360px;
+      resize: vertical;
+      line-height: 1.45;
+      font-family: var(--font);
     }
 
     #excelEditTbl th {
@@ -927,6 +976,16 @@
         width: 90px
       }
     }
+
+    .pg-wrap{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
+    .pg-info{font-size:12px;color:var(--tx2)}
+    .pg-btns{display:flex;gap:4px;align-items:center}
+    .pg-btn{min-width:32px;height:32px;padding:0 8px;border-radius:var(--rs);border:1.5px solid var(--bdr);background:#fff;color:var(--tx2);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
+    .pg-btn:hover:not(:disabled){border-color:var(--p);color:var(--p);background:var(--pl)}
+    .pg-btn.active{background:var(--p);color:#fff;border-color:var(--p)}
+    .pg-btn:disabled{opacity:.4;cursor:not-allowed}
+    .pg-dots{font-size:13px;color:var(--tx3);padding:0 4px}
+
   </style>
 </head>
 
@@ -1190,6 +1249,7 @@
               <tbody id="excelEditBody"></tbody>
             </table>
           </div>
+          <div class="pg-wrap" id="pgExcelEdit"></div>
           <div class="stmsg" id="excelEditSt"></div>
         </div>
       </div>
@@ -1805,12 +1865,17 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
     function formatRowDateForInput(v) {
       const d = parseD(v);
       if (!d) return v == null || v === '' ? '' : String(v);
-      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      // Return YYYY-MM-DD for type="date" input
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
     function parseInputToDateValue(str) {
       const s = String(str || '').trim();
       if (!s) return null;
+      // YYYY-MM-DD (from type="date" input)
+      const m1 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (m1) { const d = new Date(+m1[1], +m1[2]-1, +m1[3]); return isNaN(d.getTime()) ? s : d; }
+      // DD/MM/YYYY (legacy)
       const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
       if (m) {
         const d = new Date(+m[3], +m[2] - 1, +m[1]);
@@ -1881,6 +1946,140 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
       }
     }
 
+    let excelEditPage = 1;
+    const EXCEL_PAGE_SIZE = 10;
+
+
+    // Dropdown options — built dynamically from allData + hardcoded fallback
+    const DROPDOWN_FIELDS = new Set(['itid','donvi','hethong','mucdo','loai','tinhtrang','banphong']);
+
+    const DROPDOWN_FALLBACK = {
+      itid:      ['AN.PN','DAT.ND2','LIEM.VT','MINH.VT','OANH.TTK','PHONG.HT','QUANG.HN','QUANG.LND','THACH.PN','THACH.TH','THUAN.NB2'],
+      donvi:     ['DAK','DVK','KBB','KDH','KDK','KDN','KTA','KTN','LNG','LOG','NCSP','PVCOATING','PVPIPE','SAP'],
+      hethong:   ['AD','APP PV GAS','Bravo','CKS','CONFERENCE','EMAL EXCHANGE','HR','MAXIMO','MFA','MIS','OS','Office','Pháp chế','Printer','QLCV','SAP','SP','Tender','VPN','WEB','Wifi'],
+      mucdo:     ['Thấp','Trung bình','Phức tạp','Rất phức tạp'],
+      loai:      ['Software','Hardware','Meeting','System','Thêm mới','Thay đổi, chỉnh sửa','Hỗ trợ vận hành','General'],
+      tinhtrang: ['Hoàn Thành','Đang thực hiện','Mới','Đã lên kế hoạch'],
+      banphong:  ['ATMT','BKS','CĐ','DAK','DDK','DMST','DTPT','DVK','GPP','KBB','KDK','KDN','KH','KHDT','KHĐT','KSNB','KT','KTA','KTAT','KTCN','KTGS','KTHD','KTN','KTSX','LNG','LOG','Logistics','NCSP','PC','PTDA','PTKD','PVPIPE','QLNK','TC','TCHC','TCKT','TCNS','TKCN','TM','TMPC','TTDDK','VIP','VP','VPCD','VPDU','XDX','ĐTPT','ĐVT'],
+    };
+
+    function getDropdownOptions(field) {
+      if (allData && allData.length) {
+        const vals = [...new Set(allData.map(r => r[field]).filter(v => v && String(v).trim()))].sort();
+        if (vals.length) return vals;
+      }
+      return DROPDOWN_FALLBACK[field] || [];
+    }
+
+    function buildDatalistCell(field, currentVal) {
+      const listId = 'dl-' + field;
+      const opts = getDropdownOptions(field);
+      const optHtml = opts.map(o => `<option value="${escAttr(o)}">`).join('');
+      // Ensure datalist exists in DOM
+      if (!document.getElementById(listId)) {
+        const dl = document.createElement('datalist');
+        dl.id = listId;
+        dl.innerHTML = optHtml;
+        document.body.appendChild(dl);
+      } else {
+        document.getElementById(listId).innerHTML = optHtml;
+      }
+      return `<td><input type="text" class="cell-inp" data-f="${field}" list="${listId}" value="${escAttr(currentVal)}" autocomplete="off" placeholder="Tìm..."/></td>`;
+    }
+
+    function buildSelectCell(field, currentVal) {
+      const opts = getDropdownOptions(field);
+      // Add current value if not in list
+      const allOpts = opts.includes(currentVal) || !currentVal ? opts : [currentVal, ...opts];
+      const optHtml = ['', ...allOpts].map(o =>
+        `<option value="${escAttr(o)}"${o === currentVal ? ' selected' : ''}>${o || '—'}</option>`
+      ).join('');
+      return `<td><select class="cell-sel" data-f="${field}">${optHtml}</select></td>`;
+    }
+
+        function renderExcelPg(sorted, page) {
+      excelEditPage = page;
+      const total   = sorted.length;
+      const maxPage = Math.max(1, Math.ceil(total / EXCEL_PAGE_SIZE));
+      excelEditPage = Math.min(Math.max(1, excelEditPage), maxPage);
+      const start   = (excelEditPage - 1) * EXCEL_PAGE_SIZE;
+      const slice   = sorted.slice(start, start + EXCEL_PAGE_SIZE);
+
+      const body = document.getElementById('excelEditBody');
+      body.innerHTML = '';
+      slice.forEach(r => {
+        if (r.__eid == null) r.__eid = editRowSeq++;
+        const tr = document.createElement('tr');
+        tr.dataset.eid = String(r.__eid);
+        const cells = EXCEL_EDIT_FIELDS.map(f => {
+          if (DROPDOWN_FIELDS.has(f)) {
+            return buildSelectCell(f, String(r[f] ?? ''));
+          }
+          if (f === 'user') {
+            return buildDatalistCell(f, String(r[f] ?? ''));
+          }
+          if (f === 'title') {
+            const val = String(r[f] ?? '');
+            const preview = val.length > 40 ? val.substring(0,40)+'…' : val;
+            return `<td><button type="button" class="cell-text-trigger${val?'':' empty'}" data-f="${f}" data-eid="${r.__eid}" onclick="openTxtModal(this)" title="${escAttr(val)}">${escAttr(preview)||'(trống – click để nhập)'}</button></td>`;
+          }
+          const val = f === 'date' ? formatRowDateForInput(r[f]) : String(r[f] ?? '');
+          const inputType = f === 'date' ? 'date' : 'text';
+          return `<td><input type="${inputType}" class="cell-inp" data-f="${f}" value="${escAttr(val)}"/></td>`;
+        }).join('');
+        tr.innerHTML = cells + `<td><button type="button" class="btn btn-o" style="padding:4px 8px;font-size:11px" onclick="deleteMonthRow(${r.__eid})" title="Xóa vĩnh viễn khỏi dữ liệu đang mở">Xóa khỏi file</button></td>`;
+        body.appendChild(tr);
+      });
+
+      // Render pagination controls
+      const pgDiv = document.getElementById('pgExcelEdit');
+      if (!pgDiv) return;
+      pgDiv.innerHTML = '';
+      if (total === 0) return;
+
+      const info = document.createElement('div');
+      info.className = 'pg-info';
+      info.textContent = `Hiển thị ${start+1}–${Math.min(start+EXCEL_PAGE_SIZE,total)} / ${total} dòng`;
+      pgDiv.appendChild(info);
+
+      const btns = document.createElement('div');
+      btns.className = 'pg-btns';
+
+      const mkBtn = (label, targetPage, isActive=false, disabled=false) => {
+        const b = document.createElement('button');
+        b.className = 'pg-btn' + (isActive ? ' active' : '');
+        b.disabled  = disabled;
+        b.innerHTML = label;
+        b.onclick   = () => renderExcelPg(sorted, targetPage);
+        return b;
+      };
+
+      btns.appendChild(mkBtn('&#8249;', excelEditPage-1, false, excelEditPage===1));
+
+      const pages = [];
+      if (maxPage <= 7) {
+        for (let i=1; i<=maxPage; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        if (excelEditPage > 3) pages.push('...');
+        for (let i=Math.max(2,excelEditPage-1); i<=Math.min(maxPage-1,excelEditPage+1); i++) pages.push(i);
+        if (excelEditPage < maxPage-2) pages.push('...');
+        pages.push(maxPage);
+      }
+      pages.forEach(p => {
+        if (p === '...') {
+          const d = document.createElement('span');
+          d.className = 'pg-dots'; d.textContent = '···';
+          btns.appendChild(d);
+        } else {
+          btns.appendChild(mkBtn(p, p, p===excelEditPage));
+        }
+      });
+
+      btns.appendChild(mkBtn('&#8250;', excelEditPage+1, false, excelEditPage===maxPage));
+      pgDiv.appendChild(btns);
+    }
+
     function renderExcelEditor() {
       const body = document.getElementById('excelEditBody');
       const st = document.getElementById('excelEditSt');
@@ -1895,19 +2094,9 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
         body.innerHTML = '<tr><td colspan="11">Không có dòng nào trong tháng này. Dùng “Thêm dòng” hoặc đổi tháng.</td></tr>';
         return;
       }
-      body.innerHTML = '';
+      excelEditPage = 1; // reset về trang 1 mỗi khi render lại
       const sorted = [...monthData].sort((a, b) => (parseD(b.date) || 0) - (parseD(a.date) || 0));
-      sorted.forEach(r => {
-        if (r.__eid == null) r.__eid = editRowSeq++;
-        const tr = document.createElement('tr');
-        tr.dataset.eid = String(r.__eid);
-        const cells = EXCEL_EDIT_FIELDS.map(f => {
-          const val = f === 'date' ? formatRowDateForInput(r[f]) : String(r[f] ?? '');
-          return `<td><input type="text" class="cell-inp" data-f="${f}" value="${escAttr(val)}"/></td>`;
-        }).join('');
-        tr.innerHTML = cells + `<td><button type="button" class="btn btn-o" style="padding:4px 8px;font-size:11px" onclick="deleteMonthRow(${r.__eid})" title="Xóa vĩnh viễn khỏi dữ liệu đang mở">Xóa khỏi file</button></td>`;
-        body.appendChild(tr);
-      });
+      renderExcelPg(sorted, 1);
     }
 
     function exportMonthExcel() {
@@ -1970,18 +2159,12 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
       const tbl = document.getElementById('excelEditTbl');
       if (!tbl || excelEditorListenersBound) return;
       excelEditorListenersBound = true;
-      tbl.addEventListener('input', (e) => {
-        const inp = e.target.closest('input.cell-inp');
-        if (!inp) return;
-        const tr = inp.closest('tr');
-        if (!tr || !tr.dataset.eid) return;
-        const row = allData.find(r => r.__eid === +tr.dataset.eid);
-        if (!row) return;
-        const f = inp.dataset.f;
-        if (f === 'date') row.date = parseInputToDateValue(inp.value);
-        else if (EXCEL_EDIT_FIELDS.includes(f)) row[f] = inp.value;
+      // Shared refresh logic for both input and select changes
+      function handleCellChange(row, f, value) {
+        if (f === 'date') row.date = parseInputToDateValue(value);
+        else if (EXCEL_EDIT_FIELDS.includes(f)) row[f] = value;
         const prevLen = monthData.length;
-        const hadRow = monthData.includes(row);
+        const hadRow  = monthData.includes(row);
         if (excelEditorRefreshTimer) clearTimeout(excelEditorRefreshTimer);
         excelEditorRefreshTimer = setTimeout(() => {
           excelEditorRefreshTimer = null;
@@ -1990,9 +2173,7 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
           const bsub = document.getElementById('bannerSub');
           if (bsub && selYear != null && selMonth != null)
             bsub.textContent = `${monthData.length} ticket · Nhấn để tạo file Word và tải xuống ngay`;
-          renderKPI();
-          renderCurrentView();
-          renderTable();
+          renderKPI(); renderCurrentView(); renderTable();
           const nlen = monthData.length;
           const still = monthData.includes(row);
           if (!still || nlen !== prevLen || !hadRow) {
@@ -2001,6 +2182,28 @@ Trả về JSON hợp lệ duy nhất (không markdown, không backtick), theo �
             if (est && (!still || !hadRow)) showSt(est, 'ok', 'Đã cập nhật — một số dòng có thể đã chuyển sang tháng khác.');
           }
         }, 380);
+      }
+
+      // input listener (text fields + textarea)
+      tbl.addEventListener('input', (e) => {
+        const inp = e.target.closest('input.cell-inp, textarea.cell-inp');
+        if (!inp) return;
+        const tr = inp.closest('tr');
+        if (!tr || !tr.dataset.eid) return;
+        const row = allData.find(r => r.__eid === +tr.dataset.eid);
+        if (!row) return;
+        handleCellChange(row, inp.dataset.f, inp.value);
+      });
+
+      // change listener (select dropdowns)
+      tbl.addEventListener('change', (e) => {
+        const sel = e.target.closest('select.cell-sel');
+        if (!sel) return;
+        const tr = sel.closest('tr');
+        if (!tr || !tr.dataset.eid) return;
+        const row = allData.find(r => r.__eid === +tr.dataset.eid);
+        if (!row) return;
+        handleCellChange(row, sel.dataset.f, sel.value);
       });
     }
 
@@ -3158,7 +3361,8 @@ Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick)
     </div>
   </div>
 
-</div></body></html>`;
+</div>
+</body></html>`;
 
         // ── html2canvas → jsPDF ───────────────────────────────────────────────
         const iframe = document.createElement('iframe');
@@ -3212,7 +3416,80 @@ Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick)
 
     bindExcelEditorInput();
     initExcelEditCollapseFromStorage();
+
+    // ── Text Edit Modal ─────────────────────────────────────────────────────
+    let _txtModalBtn = null;
+
+    function openTxtModal(btn) {
+      _txtModalBtn = btn;
+      const eid  = +btn.dataset.eid;
+      const field = btn.dataset.f;
+      const row  = allData.find(r => r.__eid === eid);
+      const val  = row ? String(row[field] ?? '') : '';
+      document.getElementById('txtModalTitle').textContent = 'Chỉnh sửa: ' + (field === 'title' ? 'Mô tả chi tiết' : field);
+      const ta = document.getElementById('txtModalTa');
+      ta.value = val;
+      document.getElementById('txtModalOverlay').classList.add('open');
+      setTimeout(() => ta.focus(), 80);
+    }
+
+    function closeTxtModal(e) {
+      if (e && e.target !== document.getElementById('txtModalOverlay')) return;
+      document.getElementById('txtModalOverlay').classList.remove('open');
+      _txtModalBtn = null;
+    }
+
+    function closeTxtModalCancel() {
+      document.getElementById('txtModalOverlay').classList.remove('open');
+      _txtModalBtn = null;
+    }
+
+    function saveTxtModal() {
+      if (!_txtModalBtn) return;
+      const eid   = +_txtModalBtn.dataset.eid;
+      const field = _txtModalBtn.dataset.f;
+      const val   = document.getElementById('txtModalTa').value;
+      const row   = allData.find(r => r.__eid === eid);
+      if (row) {
+        row[field] = val;
+        // Update button preview
+        const preview = val.length > 40 ? val.substring(0,40)+'…' : val;
+        _txtModalBtn.textContent = preview || '(trống – click để nhập)';
+        _txtModalBtn.classList.toggle('empty', !val);
+        _txtModalBtn.title = val;
+        // Trigger refresh
+        if (excelEditorRefreshTimer) clearTimeout(excelEditorRefreshTimer);
+        excelEditorRefreshTimer = setTimeout(() => {
+          excelEditorRefreshTimer = null;
+          syncMonthDataFilter(); rebuildMonthMapFromAllData();
+          renderKPI(); renderCurrentView(); renderTable();
+        }, 300);
+      }
+      document.getElementById('txtModalOverlay').classList.remove('open');
+      _txtModalBtn = null;
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeTxtModalCancel();
+    });
   </script>
+
+  <!-- Text Edit Modal -->
+  <div class="txt-modal-overlay" id="txtModalOverlay" onclick="closeTxtModal(event)">
+    <div class="txt-modal" role="dialog" aria-modal="true">
+      <div class="txt-modal-title" id="txtModalTitle">Chỉnh sửa nội dung</div>
+      <textarea class="txt-modal-ta" id="txtModalTa" placeholder="Nhập nội dung..."></textarea>
+      <div class="txt-modal-footer">
+        <button class="btn btn-o" onclick="closeTxtModalCancel()">Huỷ</button>
+        <button class="btn btn-p" onclick="saveTxtModal()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+          Lưu
+        </button>
+      </div>
+    </div>
+  </div>
+
 </body>
 
 </html>
