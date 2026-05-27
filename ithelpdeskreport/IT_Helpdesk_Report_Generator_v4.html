@@ -3417,6 +3417,245 @@ Trả về JSON hợp lệ duy nhất (không có markdown, không có backtick)
     bindExcelEditorInput();
     initExcelEditCollapseFromStorage();
 
+
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // ADD-ON V4.3: Lọc dữ liệu theo giá trị cột + nhảy nhanh trang cho Excel Editor
+    // Chỉ giữ dropdown lọc theo cột/giá trị theo yêu cầu.
+    // ─────────────────────────────────────────────────────────────────────────────
+    var excelEditFilterField = '';
+    var excelEditFilterValue = '';
+    var excelEditCurrentRows = [];
+
+    (function injectExcelEditFilterCss(){
+      if (document.getElementById('excel-edit-filter-css')) return;
+      const css = document.createElement('style');
+      css.id = 'excel-edit-filter-css';
+      css.textContent = `
+        .excel-filter-toolbar{
+          display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;
+          margin:12px 0 10px;padding:12px;border:1px solid var(--bdr);
+          border-radius:var(--rs);background:linear-gradient(180deg,#fff,#f9fafb);
+        }
+        .excel-filter-group{display:flex;flex-direction:column;gap:5px;min-width:210px}
+        .excel-filter-lbl{font-size:11px;font-weight:800;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em}
+        .excel-filter-select{
+          width:100%;height:36px;border:1.5px solid var(--bdr);border-radius:var(--rs);
+          background:#fff;color:var(--tx);font-size:13px;font-family:var(--font);padding:0 10px;
+        }
+        .excel-filter-select:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px var(--pl)}
+        .excel-filter-select:disabled{background:#f3f4f6;color:var(--tx3);cursor:not-allowed}
+        .excel-filter-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+        .pg-jump{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}
+        .pg-jump label{font-size:12px;color:var(--tx2);font-weight:600}
+        .pg-jump input{width:74px;height:32px;border:1.5px solid var(--bdr);border-radius:var(--rs);padding:0 8px;font-family:var(--font);font-size:13px}
+        .pg-jump input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px var(--pl)}
+        @media(max-width:640px){.excel-filter-group{min-width:100%;}.pg-jump{margin-left:0;width:100%;}}
+      `;
+      document.head.appendChild(css);
+    })();
+
+    function getExcelEditFieldLabel(field){
+      const fallback = { date:'Ngày YC', title:'Tiêu đề', itid:'ITID', user:'Người YC', donvi:'Đơn vị', hethong:'Hệ thống', mucdo:'Mức độ', loai:'Loại YC', tinhtrang:'Trạng thái', banphong:'Ban/Phòng' };
+      return String((excelHeaderByField && excelHeaderByField[field]) || fallback[field] || field);
+    }
+
+    function getExcelEditFilterableFields(){
+      return ['tinhtrang','donvi','hethong','mucdo','loai','banphong','itid'];
+    }
+
+    function getExcelEditUniqueValues(field){
+      if (!field) return [];
+      const map = new Map();
+      monthData.forEach(r => {
+        const val = String(r[field] ?? '').trim();
+        if (!val || val === 'null' || val === 'undefined') return;
+        map.set(val, (map.get(val) || 0) + 1);
+      });
+      return [...map.entries()].sort((a,b) => String(a[0]).localeCompare(String(b[0]), 'vi', { numeric:true, sensitivity:'base' }));
+    }
+
+    function ensureExcelFilterToolbar(){
+      const panel = document.getElementById('excelEditPanel');
+      if (!panel) return null;
+      let tb = document.getElementById('excelFilterToolbar');
+      if (!tb) {
+        tb = document.createElement('div');
+        tb.id = 'excelFilterToolbar';
+        tb.className = 'excel-filter-toolbar';
+        const actions = panel.querySelector('.actions');
+        if (actions && actions.parentNode) actions.parentNode.insertBefore(tb, actions.nextSibling);
+        else panel.insertBefore(tb, panel.firstChild);
+      }
+      const fieldOptions = ['<option value="">-- Chọn cột lọc --</option>'].concat(
+        getExcelEditFilterableFields().map(f => `<option value="${escAttr(f)}"${f===excelEditFilterField?' selected':''}>${esc(getExcelEditFieldLabel(f))}</option>`)
+      ).join('');
+      const valueOptions = ['<option value="">Tất cả giá trị</option>'].concat(
+        getExcelEditUniqueValues(excelEditFilterField).map(([v,c]) => `<option value="${escAttr(v)}"${v===excelEditFilterValue?' selected':''}>${esc(v)} (${c})</option>`)
+      ).join('');
+      tb.innerHTML = `
+        <div class="excel-filter-group">
+          <label class="excel-filter-lbl" for="excelEditFilterField">Lọc theo cột</label>
+          <select id="excelEditFilterField" class="excel-filter-select" onchange="excelEditFilterFieldChanged(this.value)">${fieldOptions}</select>
+        </div>
+        <div class="excel-filter-group">
+          <label class="excel-filter-lbl" for="excelEditFilterValue">Chọn giá trị</label>
+          <select id="excelEditFilterValue" class="excel-filter-select" ${excelEditFilterField?'':'disabled'} onchange="excelEditFilterValue=this.value; excelEditPage=1; renderExcelEditor();">${valueOptions}</select>
+        </div>
+        <div class="excel-filter-actions">
+          <button type="button" class="btn btn-o" onclick="excelEditClearFilters()">Xóa lọc</button>
+        </div>
+      `;
+      return tb;
+    }
+
+    function excelEditFilterFieldChanged(field){
+      excelEditFilterField = field || '';
+      excelEditFilterValue = '';
+      excelEditPage = 1;
+      renderExcelEditor();
+    }
+
+    function excelEditClearFilters(){
+      excelEditFilterField = '';
+      excelEditFilterValue = '';
+      excelEditPage = 1;
+      renderExcelEditor();
+    }
+
+    function getExcelEditVisibleRows(){
+      let rows = [...monthData];
+      if (excelEditFilterField && excelEditFilterValue) {
+        rows = rows.filter(r => String(r[excelEditFilterField] ?? '').trim() === excelEditFilterValue);
+      }
+      rows.sort((a,b) => (parseD(b.date) || 0) - (parseD(a.date) || 0));
+      return rows;
+    }
+
+    function renderExcelEditor() {
+      const body = document.getElementById('excelEditBody');
+      const st = document.getElementById('excelEditSt');
+      if (!body) return;
+      if (st) { st.className = 'stmsg'; st.textContent = ''; }
+      syncMappedColumnHeaders();
+      ensureExcelFilterToolbar();
+      const pgDiv = document.getElementById('pgExcelEdit');
+      if (!excelHeaderByField) {
+        body.innerHTML = '<tr><td colspan="11">Tải file Excel (Bước 1) để bật chỉnh sửa.</td></tr>';
+        if (pgDiv) pgDiv.innerHTML = '';
+        return;
+      }
+      if (!monthData.length) {
+        body.innerHTML = '<tr><td colspan="11">Không có dòng nào trong tháng này. Dùng “Thêm dòng” hoặc đổi tháng.</td></tr>';
+        if (pgDiv) pgDiv.innerHTML = '';
+        return;
+      }
+      const rows = getExcelEditVisibleRows();
+      excelEditCurrentRows = rows;
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="11">Không tìm thấy dòng phù hợp với bộ lọc hiện tại.</td></tr>';
+        if (pgDiv) pgDiv.innerHTML = '';
+        return;
+      }
+      const maxPage = Math.max(1, Math.ceil(rows.length / EXCEL_PAGE_SIZE));
+      renderExcelPg(rows, Math.min(Math.max(1, excelEditPage || 1), maxPage));
+    }
+
+    function renderExcelPg(sorted, page) {
+      excelEditPage = page;
+      excelEditCurrentRows = sorted || [];
+      const total   = sorted.length;
+      const maxPage = Math.max(1, Math.ceil(total / EXCEL_PAGE_SIZE));
+      excelEditPage = Math.min(Math.max(1, excelEditPage), maxPage);
+      const start   = (excelEditPage - 1) * EXCEL_PAGE_SIZE;
+      const slice   = sorted.slice(start, start + EXCEL_PAGE_SIZE);
+      const body = document.getElementById('excelEditBody');
+      body.innerHTML = '';
+      slice.forEach(r => {
+        if (r.__eid == null) r.__eid = editRowSeq++;
+        const tr = document.createElement('tr');
+        tr.dataset.eid = String(r.__eid);
+        const cells = EXCEL_EDIT_FIELDS.map(f => {
+          if (DROPDOWN_FIELDS.has(f)) return buildSelectCell(f, String(r[f] ?? ''));
+          if (f === 'user') return buildDatalistCell(f, String(r[f] ?? ''));
+          if (f === 'title') {
+            const val = String(r[f] ?? '');
+            const preview = val.length > 40 ? val.substring(0,40)+'…' : val;
+            return `<td><button type="button" class="cell-text-trigger${val?'':' empty'}" data-f="${f}" data-eid="${r.__eid}" onclick="openTxtModal(this)" title="${escAttr(val)}">${escAttr(preview)||'(trống – click để nhập)'}</button></td>`;
+          }
+          const val = f === 'date' ? formatRowDateForInput(r[f]) : String(r[f] ?? '');
+          const inputType = f === 'date' ? 'date' : 'text';
+          return `<td><input type="${inputType}" class="cell-inp" data-f="${f}" value="${escAttr(val)}"/></td>`;
+        }).join('');
+        tr.innerHTML = cells + `<td><button type="button" class="btn btn-o" style="padding:4px 8px;font-size:11px" onclick="deleteMonthRow(${r.__eid})" title="Xóa vĩnh viễn khỏi dữ liệu đang mở">Xóa khỏi file</button></td>`;
+        body.appendChild(tr);
+      });
+
+      const pgDiv = document.getElementById('pgExcelEdit');
+      if (!pgDiv) return;
+      pgDiv.innerHTML = '';
+      if (total === 0) return;
+      const info = document.createElement('div');
+      info.className = 'pg-info';
+      const filtered = (excelEditFilterField && excelEditFilterValue);
+      const filteredNote = filtered ? ` sau lọc / ${monthData.length} dòng tháng` : '';
+      info.textContent = `Hiển thị ${start+1}–${Math.min(start+EXCEL_PAGE_SIZE,total)} / ${total} dòng${filteredNote}`;
+      pgDiv.appendChild(info);
+
+      const btns = document.createElement('div');
+      btns.className = 'pg-btns';
+      const mkBtn = (label, targetPage, isActive=false, disabled=false) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pg-btn' + (isActive ? ' active' : '');
+        b.disabled  = disabled;
+        b.innerHTML = label;
+        b.onclick   = () => renderExcelPg(sorted, targetPage);
+        return b;
+      };
+      btns.appendChild(mkBtn('&#8249;', excelEditPage-1, false, excelEditPage===1));
+      const pages = [];
+      if (maxPage <= 7) {
+        for (let i=1; i<=maxPage; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        if (excelEditPage > 3) pages.push('...');
+        for (let i=Math.max(2,excelEditPage-1); i<=Math.min(maxPage-1,excelEditPage+1); i++) pages.push(i);
+        if (excelEditPage < maxPage-2) pages.push('...');
+        pages.push(maxPage);
+      }
+      pages.forEach(p => {
+        if (p === '...') {
+          const d = document.createElement('span');
+          d.className = 'pg-dots'; d.textContent = '···';
+          btns.appendChild(d);
+        } else btns.appendChild(mkBtn(p, p, p===excelEditPage));
+      });
+      btns.appendChild(mkBtn('&#8250;', excelEditPage+1, false, excelEditPage===maxPage));
+      pgDiv.appendChild(btns);
+
+      const jump = document.createElement('div');
+      jump.className = 'pg-jump';
+      jump.innerHTML = `
+        <label for="excelEditJumpPage">Đi tới trang</label>
+        <input id="excelEditJumpPage" type="number" min="1" max="${maxPage}" value="${excelEditPage}"
+               onkeydown="if(event.key==='Enter') excelEditGoPage()">
+        <button type="button" class="pg-btn" onclick="excelEditGoPage()">Đi</button>
+      `;
+      pgDiv.appendChild(jump);
+    }
+
+    function excelEditGoPage(){
+      const inp = document.getElementById('excelEditJumpPage');
+      const rows = excelEditCurrentRows && excelEditCurrentRows.length ? excelEditCurrentRows : getExcelEditVisibleRows();
+      const maxPage = Math.max(1, Math.ceil(rows.length / EXCEL_PAGE_SIZE));
+      let p = parseInt(inp?.value, 10);
+      if (!Number.isFinite(p)) p = 1;
+      p = Math.min(Math.max(1, p), maxPage);
+      excelEditPage = p;
+      renderExcelPg(rows, p);
+    }
+
     // ── Text Edit Modal ─────────────────────────────────────────────────────
     let _txtModalBtn = null;
 
